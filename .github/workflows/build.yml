@@ -48,7 +48,8 @@ jobs:
             -Dsonar.tests=src/test/java
             -Dsonar.java.binaries=target/classes
             -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml
-            -Dsonar.branch.name=main
+            -Dsonar.verbose=true
+
 
       - name: SonarQube Quality Gate check
         id: sonarqube-quality-gate-check
