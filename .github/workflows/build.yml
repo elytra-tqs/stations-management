@@ -3,7 +3,7 @@ name: SonarQube Analysis with Quality Gate
 on:
   push:
     branches:
-      - main
+      - EL-46-Add-sonarcloud-to-all-repositories
   pull_request:
     types: [opened, synchronize, reopened]
   workflow_dispatch:
