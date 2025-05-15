@@ -1,0 +1,19 @@
+name: Notify Main Repo
+on:
+  push:
+    branches: [dev]
+
+jobs:
+  notify-main-repo:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger main repo workflow
+        uses: peter-evans/repository-dispatch@v2
+        with:
+          token: ${{ secrets.BOT_PAT }}          # 👈 PAT instead of DISPATCH_TOKEN
+          repository: elytra-tqs/elytra
+          event-type: submodule-updated
+          client-payload: >
+            {"submodule_name":"${{ github.repository }}",
+             "commit_sha":"${{ github.sha }}"}
+
