@@ -27,7 +27,7 @@ class StationControllerTest {
                                 "\"longitude\": -8.54321" +
                                 "}";
 
-                mockMvc.perform(post("/stations")
+                mockMvc.perform(post("/api/v1/stations")
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(stationJson))
                                 .andExpect(status().isCreated());
@@ -45,12 +45,12 @@ class StationControllerTest {
                                 "{\"type\": \"CCS\", \"power\": 50.0}" +
                                 "]" +
                                 "}";
-                mockMvc.perform(post("/stations")
+                mockMvc.perform(post("/api/v1/stations")
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(stationJson))
                                 .andExpect(status().isCreated());
 
-                mockMvc.perform(get("/stations"))
+                mockMvc.perform(get("/api/v1/stations"))
                                 .andExpect(status().isOk())
                                 .andExpect(content().contentType(MediaType.APPLICATION_JSON));
         }
@@ -62,7 +62,7 @@ class StationControllerTest {
                                 "\"latitude\": 40.12345," +
                                 "\"longitude\": -8.54321" +
                                 "}";
-                mockMvc.perform(post("/stations")
+                mockMvc.perform(post("/api/v1/stations")
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(invalidJson))
                                 .andExpect(status().isBadRequest());
@@ -71,7 +71,7 @@ class StationControllerTest {
         @Test
         void registerStation_unsupportedContentType_returns415() throws Exception {
                 String stationJson = "name=Central Station&address=123 Main St&latitude=40.12345&longitude=-8.54321";
-                mockMvc.perform(post("/stations")
+                mockMvc.perform(post("/api/v1/stations")
                                 .contentType(MediaType.APPLICATION_FORM_URLENCODED)
                                 .content(stationJson))
                                 .andExpect(status().isUnsupportedMediaType());
@@ -86,7 +86,7 @@ class StationControllerTest {
                                 "\"longitude\": -8.54321," +
                                 "\"unexpectedField\": \"shouldBeIgnoredOrRejected\"" +
                                 "}";
-                mockMvc.perform(post("/stations")
+                mockMvc.perform(post("/api/v1/stations")
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(stationJson))
                                 .andExpect(status().isCreated());
@@ -100,12 +100,12 @@ class StationControllerTest {
                                 "\"latitude\": 40.12345," +
                                 "\"longitude\": -8.54321" +
                                 "}";
-                mockMvc.perform(post("/stations")
+                mockMvc.perform(post("/api/v1/stations")
                                 .contentType(MediaType.APPLICATION_JSON)
                                 .content(stationJson))
                                 .andExpect(status().isCreated());
 
-                mockMvc.perform(get("/stations"))
+                mockMvc.perform(get("/api/v1/stations"))
                                 .andExpect(status().isOk())
                                 .andExpect(content().contentType(MediaType.APPLICATION_JSON));
         }
