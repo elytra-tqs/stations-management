@@ -1,4 +1,4 @@
-package elytra.stations_management;
+package elytra.stations_management.controller;
 
 import java.util.List;
 
@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import elytra.stations_management.models.Station;
+import elytra.stations_management.service.StationService;
 
 @RestController
 @RequestMapping("/stations")

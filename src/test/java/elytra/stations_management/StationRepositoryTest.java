@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 
 import elytra.stations_management.models.Station;
+import elytra.stations_management.repository.StationRepository;
 
 @DataJpaTest
 class StationRepositoryTest {

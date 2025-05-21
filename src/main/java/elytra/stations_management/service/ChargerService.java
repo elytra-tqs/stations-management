@@ -1,12 +1,13 @@
 package elytra.stations_management.service;
 
 import java.util.List;
+
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import elytra.stations_management.exception.InvalidStatusTransitionException;
 import elytra.stations_management.models.Charger;
 import elytra.stations_management.repository.ChargerRepository;
-import elytra.stations_management.exception.InvalidStatusTransitionException;
 
 @Service
 public class ChargerService {
@@ -18,37 +19,37 @@ public class ChargerService {
     }
 
     @Transactional(readOnly = true)
-    public Charger.AvailabilityStatus getChargerAvailability(Long chargerId) {
+    public Charger.Status getChargerAvailability(Long chargerId) {
         Charger charger = chargerRepository.findById(chargerId)
                 .orElseThrow(() -> new RuntimeException("Charger not found"));
-        return charger.getAvailabilityStatus();
+        return charger.getStatus();
     }
 
     @Transactional
-    public Charger updateChargerAvailability(Long chargerId, Charger.AvailabilityStatus newStatus) {
+    public Charger updateChargerAvailability(Long chargerId, Charger.Status newStatus) {
         Charger charger = chargerRepository.findById(chargerId)
                 .orElseThrow(() -> new RuntimeException("Charger not found"));
 
-        validateStatusTransition(charger.getAvailabilityStatus(), newStatus);
-        charger.setAvailabilityStatus(newStatus);
+        validateStatusTransition(charger.getStatus(), newStatus);
+        charger.setStatus(newStatus);
         return chargerRepository.save(charger);
     }
 
     @Transactional(readOnly = true)
-    public List<Charger> getChargersByAvailability(Charger.AvailabilityStatus status) {
-        return chargerRepository.findByAvailabilityStatus(status);
+    public List<Charger> getChargersByAvailability(Charger.Status status) {
+        return chargerRepository.findByStatus(status);
     }
 
     @Transactional(readOnly = true)
     public List<Charger> getAvailableChargersAtStation(Long stationId) {
-        return chargerRepository.findByStationIdAndAvailabilityStatus(stationId, Charger.AvailabilityStatus.AVAILABLE);
+        return chargerRepository.findByStationIdAndStatus(stationId, Charger.Status.AVAILABLE);
     }
 
-    private void validateStatusTransition(Charger.AvailabilityStatus currentStatus,
-            Charger.AvailabilityStatus newStatus) {
-        if (currentStatus == Charger.AvailabilityStatus.OUT_OF_SERVICE &&
-                newStatus == Charger.AvailabilityStatus.IN_USE) {
-            throw new InvalidStatusTransitionException("Cannot transition from OUT_OF_SERVICE to IN_USE");
+    private void validateStatusTransition(Charger.Status currentStatus,
+            Charger.Status newStatus) {
+        if (currentStatus == Charger.Status.OUT_OF_SERVICE &&
+                newStatus == Charger.Status.BEING_USED) {
+            throw new InvalidStatusTransitionException("Cannot transition from OUT_OF_SERVICE to BEING_USED");
         }
     }
 }

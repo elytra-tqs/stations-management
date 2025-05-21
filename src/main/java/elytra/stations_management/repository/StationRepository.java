@@ -1,4 +1,4 @@
-package elytra.stations_management;
+package elytra.stations_management.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 

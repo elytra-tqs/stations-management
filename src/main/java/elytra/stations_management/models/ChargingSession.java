@@ -1,8 +1,7 @@
-package elytra.stations_management.model;
+package elytra.stations_management.models;
 
 import java.time.LocalDateTime;
 
-import elytra.stations_management.models.Station;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;

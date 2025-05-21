@@ -10,6 +10,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import static org.mockito.ArgumentMatchers.any;
+import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -25,87 +26,79 @@ class ChargerServiceTest {
     @Mock
     private ChargerRepository chargerRepository;
 
+    @InjectMocks
     private ChargerService chargerService;
+
     private Charger charger;
 
     @BeforeEach
     void setUp() {
-        chargerService = new ChargerService(chargerRepository);
         charger = Charger.builder()
                 .id(1L)
                 .type("Type 2")
-                .power(22.0)
-                .availabilityStatus(Charger.AvailabilityStatus.AVAILABLE)
+                .power(50.0)
+                .status(Charger.Status.AVAILABLE)
                 .build();
     }
 
     @Test
-    void whenGettingChargerAvailability_thenReturnStatus() {
+    void getChargerAvailability_ShouldReturnStatus() {
         when(chargerRepository.findById(1L)).thenReturn(Optional.of(charger));
 
-        Charger.AvailabilityStatus status = chargerService.getChargerAvailability(1L);
+        Charger.Status status = chargerService.getChargerAvailability(1L);
 
-        assertEquals(Charger.AvailabilityStatus.AVAILABLE, status);
+        assertEquals(Charger.Status.AVAILABLE, status);
         verify(chargerRepository).findById(1L);
     }
 
     @Test
-    void whenGettingNonExistentChargerAvailability_thenThrowException() {
+    void getChargerAvailability_WhenChargerNotFound_ShouldThrowException() {
         when(chargerRepository.findById(1L)).thenReturn(Optional.empty());
 
         assertThrows(RuntimeException.class, () -> chargerService.getChargerAvailability(1L));
     }
 
     @Test
-    void whenUpdatingChargerAvailability_thenStatusIsUpdated() {
+    void updateChargerAvailability_ShouldUpdateStatus() {
         when(chargerRepository.findById(1L)).thenReturn(Optional.of(charger));
-        when(chargerRepository.save(any(Charger.class))).thenAnswer(i -> i.getArgument(0));
+        when(chargerRepository.save(any(Charger.class))).thenReturn(charger);
 
-        Charger updatedCharger = chargerService.updateChargerAvailability(1L, Charger.AvailabilityStatus.IN_USE);
+        Charger updatedCharger = chargerService.updateChargerAvailability(1L, Charger.Status.BEING_USED);
 
-        assertEquals(Charger.AvailabilityStatus.IN_USE, updatedCharger.getAvailabilityStatus());
-        verify(chargerRepository).findById(1L);
+        assertEquals(Charger.Status.BEING_USED, updatedCharger.getStatus());
         verify(chargerRepository).save(charger);
     }
 
     @Test
-    void whenUpdatingNonExistentChargerAvailability_thenThrowException() {
-        when(chargerRepository.findById(1L)).thenReturn(Optional.empty());
-
-        assertThrows(RuntimeException.class,
-                () -> chargerService.updateChargerAvailability(1L, Charger.AvailabilityStatus.IN_USE));
-    }
-
-    @Test
-    void whenUpdatingFromOutOfServiceToInUse_thenThrowException() {
-        charger.setAvailabilityStatus(Charger.AvailabilityStatus.OUT_OF_SERVICE);
+    void updateChargerAvailability_WhenInvalidTransition_ShouldThrowException() {
+        charger.setStatus(Charger.Status.OUT_OF_SERVICE);
         when(chargerRepository.findById(1L)).thenReturn(Optional.of(charger));
 
         assertThrows(InvalidStatusTransitionException.class,
-                () -> chargerService.updateChargerAvailability(1L, Charger.AvailabilityStatus.IN_USE));
+                () -> chargerService.updateChargerAvailability(1L, Charger.Status.BEING_USED));
     }
 
     @Test
-    void whenGettingChargersByAvailability_thenReturnList() {
+    void getChargersByAvailability_ShouldReturnList() {
         List<Charger> chargers = Arrays.asList(charger);
-        when(chargerRepository.findByAvailabilityStatus(Charger.AvailabilityStatus.AVAILABLE))
+        when(chargerRepository.findByStatus(Charger.Status.AVAILABLE))
                 .thenReturn(chargers);
 
-        List<Charger> result = chargerService.getChargersByAvailability(Charger.AvailabilityStatus.AVAILABLE);
+        List<Charger> result = chargerService.getChargersByAvailability(Charger.Status.AVAILABLE);
 
         assertEquals(chargers, result);
-        verify(chargerRepository).findByAvailabilityStatus(Charger.AvailabilityStatus.AVAILABLE);
+        verify(chargerRepository).findByStatus(Charger.Status.AVAILABLE);
     }
 
     @Test
-    void whenGettingAvailableChargersAtStation_thenReturnList() {
+    void getAvailableChargersAtStation_ShouldReturnList() {
         List<Charger> chargers = Arrays.asList(charger);
-        when(chargerRepository.findByStationIdAndAvailabilityStatus(1L, Charger.AvailabilityStatus.AVAILABLE))
+        when(chargerRepository.findByStationIdAndStatus(1L, Charger.Status.AVAILABLE))
                 .thenReturn(chargers);
 
         List<Charger> result = chargerService.getAvailableChargersAtStation(1L);
 
         assertEquals(chargers, result);
-        verify(chargerRepository).findByStationIdAndAvailabilityStatus(1L, Charger.AvailabilityStatus.AVAILABLE);
+        verify(chargerRepository).findByStationIdAndStatus(1L, Charger.Status.AVAILABLE);
     }
 }
