@@ -18,8 +18,8 @@ import org.mockito.MockitoAnnotations;
 
 import elytra.stations_management.models.Charger;
 import elytra.stations_management.models.Station;
-import elytra.stations_management.repository.StationRepository;
-import elytra.stations_management.service.StationService;
+import elytra.stations_management.repositories.StationRepository;
+import elytra.stations_management.services.StationService;
 
 class StationServiceTest {
     @Mock

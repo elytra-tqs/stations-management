@@ -1,4 +1,4 @@
-package elytra.stations_management.service;
+package elytra.stations_management.services;
 
 import java.util.List;
 
@@ -7,7 +7,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import elytra.stations_management.exception.InvalidStatusTransitionException;
 import elytra.stations_management.models.Charger;
-import elytra.stations_management.repository.ChargerRepository;
+import elytra.stations_management.repositories.ChargerRepository;
 
 @Service
 public class ChargerService {

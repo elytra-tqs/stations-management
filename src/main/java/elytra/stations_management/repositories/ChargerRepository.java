@@ -1,4 +1,4 @@
-package elytra.stations_management.repository;
+package elytra.stations_management.repositories;
 
 import java.util.List;
 

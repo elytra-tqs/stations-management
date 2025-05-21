@@ -11,11 +11,11 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import elytra.stations_management.models.Charger;
-import elytra.stations_management.service.ChargerService;
+import elytra.stations_management.services.ChargerService;
 import lombok.RequiredArgsConstructor;
 
 @RestController
-@RequestMapping("/api/chargers")
+@RequestMapping("/api/v1/chargers")
 @RequiredArgsConstructor
 public class ChargerController {
     private final ChargerService chargerService;
@@ -39,10 +39,5 @@ public class ChargerController {
     @GetMapping("/availability/{status}")
     public ResponseEntity<List<Charger>> getChargersByAvailability(@PathVariable Charger.Status status) {
         return ResponseEntity.ok(chargerService.getChargersByAvailability(status));
-    }
-
-    @GetMapping("/station/{stationId}/available")
-    public ResponseEntity<List<Charger>> getAvailableChargersAtStation(@PathVariable Long stationId) {
-        return ResponseEntity.ok(chargerService.getAvailableChargersAtStation(stationId));
     }
 }

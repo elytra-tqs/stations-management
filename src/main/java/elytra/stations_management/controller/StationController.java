@@ -13,10 +13,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import elytra.stations_management.models.Station;
-import elytra.stations_management.service.StationService;
+import elytra.stations_management.services.StationService;
 
 @RestController
-@RequestMapping("/stations")
+@RequestMapping("api/v1/stations")
 public class StationController {
 
     @Autowired

@@ -2,7 +2,7 @@ package elytra.stations_management.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import elytra.stations_management.models.Charger;
-import elytra.stations_management.service.ChargerService;
+import elytra.stations_management.services.ChargerService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -48,7 +48,7 @@ class ChargerControllerTest {
     void getChargerAvailability_ShouldReturnStatus() throws Exception {
         when(chargerService.getChargerAvailability(1L)).thenReturn(Charger.Status.AVAILABLE);
 
-        mockMvc.perform(get("/api/chargers/1/availability"))
+        mockMvc.perform(get("/api/v1/chargers/1/availability"))
                 .andExpect(status().isOk())
                 .andExpect(content().string("\"AVAILABLE\""));
     }
@@ -58,7 +58,7 @@ class ChargerControllerTest {
         when(chargerService.updateChargerAvailability(eq(1L), any(Charger.Status.class)))
                 .thenReturn(charger);
 
-        mockMvc.perform(put("/api/chargers/1/availability")
+        mockMvc.perform(put("/api/v1/chargers/1/availability")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("\"BEING_USED\""))
                 .andExpect(status().isOk())
@@ -70,7 +70,7 @@ class ChargerControllerTest {
         when(chargerService.updateChargerAvailability(eq(1L), any(Charger.Status.class)))
                 .thenThrow(new RuntimeException("Invalid transition"));
 
-        mockMvc.perform(put("/api/chargers/1/availability")
+        mockMvc.perform(put("/api/v1/chargers/1/availability")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("\"BEING_USED\""))
                 .andExpect(status().isBadRequest());
@@ -82,17 +82,7 @@ class ChargerControllerTest {
         when(chargerService.getChargersByAvailability(Charger.Status.AVAILABLE))
                 .thenReturn(chargers);
 
-        mockMvc.perform(get("/api/chargers/availability/AVAILABLE"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].status").value("AVAILABLE"));
-    }
-
-    @Test
-    void getAvailableChargersAtStation_ShouldReturnList() throws Exception {
-        List<Charger> chargers = Arrays.asList(charger);
-        when(chargerService.getAvailableChargersAtStation(1L)).thenReturn(chargers);
-
-        mockMvc.perform(get("/api/chargers/station/1/available"))
+        mockMvc.perform(get("/api/v1//chargers/availability/AVAILABLE"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].status").value("AVAILABLE"));
     }

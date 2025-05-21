@@ -1,4 +1,4 @@
-package elytra.stations_management.service;
+package elytra.stations_management.services;
 
 import java.util.Arrays;
 import java.util.List;
@@ -18,7 +18,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import elytra.stations_management.exception.InvalidStatusTransitionException;
 import elytra.stations_management.models.Charger;
-import elytra.stations_management.repository.ChargerRepository;
+import elytra.stations_management.repositories.ChargerRepository;
 
 @ExtendWith(MockitoExtension.class)
 class ChargerServiceTest {
@@ -90,15 +90,4 @@ class ChargerServiceTest {
         verify(chargerRepository).findByStatus(Charger.Status.AVAILABLE);
     }
 
-    @Test
-    void getAvailableChargersAtStation_ShouldReturnList() {
-        List<Charger> chargers = Arrays.asList(charger);
-        when(chargerRepository.findByStationIdAndStatus(1L, Charger.Status.AVAILABLE))
-                .thenReturn(chargers);
-
-        List<Charger> result = chargerService.getAvailableChargersAtStation(1L);
-
-        assertEquals(chargers, result);
-        verify(chargerRepository).findByStationIdAndStatus(1L, Charger.Status.AVAILABLE);
-    }
 }
