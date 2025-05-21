@@ -9,6 +9,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 
 import elytra.stations_management.models.Station;
+import elytra.stations_management.models.Station.MaintenanceStatus;
 
 @DataJpaTest
 class StationRepositoryTest {
@@ -22,6 +23,7 @@ class StationRepositoryTest {
                 .address("123 Main St")
                 .latitude(40.12345)
                 .longitude(-8.54321)
+                .maintenanceStatus(MaintenanceStatus.OPERATIONAL)
                 .build();
         Station saved = stationRepository.save(station);
         Optional<Station> found = stationRepository.findById(saved.getId());
