@@ -32,17 +32,11 @@ public class Station {
     private Double latitude;
     private Double longitude;
 
-    @Enumerated(EnumType.STRING)
-    @Column(nullable = false)
-    private MaintenanceStatus maintenanceStatus = MaintenanceStatus.OPERATIONAL;
+
 
     @JsonManagedReference
     @OneToMany(mappedBy = "station", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Charger> chargers = new ArrayList<>();
 
-    public enum MaintenanceStatus {
-        OPERATIONAL,
-        UNDER_MAINTENANCE,
-        OUT_OF_SERVICE
-    }
+
 }
