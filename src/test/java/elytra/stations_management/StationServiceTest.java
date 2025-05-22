@@ -111,4 +111,24 @@ class StationServiceTest {
         assertNotNull(result.getId());
         assertEquals(1L, result.getId());
     }
+
+    @Test
+    void getStationById_existingId_returnsStation() {
+        Station station = Station.builder()
+                .id(1L)
+                .name("Central Station")
+                .address("123 Main St")
+                .latitude(40.12345)
+                .longitude(-8.54321)
+                .build();
+        when(stationRepository.findById(1L)).thenReturn(java.util.Optional.of(station));
+        Station result = stationService.getStationById(1L);
+        assertEquals(station, result);
+    }
+
+    @Test
+    void getStationById_nonExistingId_throwsException() {
+        when(stationRepository.findById(1L)).thenReturn(java.util.Optional.empty());
+        assertThrows(RuntimeException.class, () -> stationService.getStationById(1L));
+    }
 }

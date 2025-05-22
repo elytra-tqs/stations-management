@@ -28,4 +28,9 @@ public class StationService {
     public List<Station> getAllStations() {
         return stationRepository.findAll();
     }
+
+    public Station getStationById(Long stationId) {
+        return stationRepository.findById(stationId)
+                .orElseThrow(() -> new RuntimeException("Station not found"));
+    }
 }
