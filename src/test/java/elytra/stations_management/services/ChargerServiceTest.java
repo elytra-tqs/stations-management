@@ -90,4 +90,16 @@ class ChargerServiceTest {
         verify(chargerRepository).findByStatus(Charger.Status.AVAILABLE);
     }
 
+    @Test
+    void updateChargerAvailability_WithValidTransition_ShouldSucceed() {
+        charger.setStatus(Charger.Status.AVAILABLE);
+        when(chargerRepository.findById(1L)).thenReturn(Optional.of(charger));
+        when(chargerRepository.save(any(Charger.class))).thenReturn(charger);
+
+        Charger updated = chargerService.updateChargerAvailability(1L, Charger.Status.BEING_USED);
+
+        assertEquals(Charger.Status.BEING_USED, updated.getStatus());
+        verify(chargerRepository).save(charger);
+    }
+
 }
