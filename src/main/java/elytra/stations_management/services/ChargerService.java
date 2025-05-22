@@ -40,10 +40,6 @@ public class ChargerService {
         return chargerRepository.findByStatus(status);
     }
 
-    @Transactional(readOnly = true)
-    public List<Charger> getAvailableChargersAtStation(Long stationId) {
-        return chargerRepository.findByStationIdAndStatus(stationId, Charger.Status.AVAILABLE);
-    }
 
     private void validateStatusTransition(Charger.Status currentStatus,
             Charger.Status newStatus) {
