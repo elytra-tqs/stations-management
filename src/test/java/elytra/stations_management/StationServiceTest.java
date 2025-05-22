@@ -155,4 +155,15 @@ class StationServiceTest {
         assertEquals(station1, result.get(0));
         assertEquals(station2, result.get(1));
     }
+
+    @Test
+    void getAllStations_emptyList_returnsEmptyList() {
+        List<Station> stations = Arrays.asList();
+        when(stationRepository.findAll()).thenReturn(stations);
+        List<Station> result = stationService.getAllStations();
+        assertEquals(0, result.size());
+    }
+
+
+
 }
