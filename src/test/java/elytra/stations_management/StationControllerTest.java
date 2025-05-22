@@ -131,4 +131,29 @@ class StationControllerTest {
                                 .andExpect(status().isOk())
                                 .andExpect(content().contentType(MediaType.APPLICATION_JSON));
         }
+
+
+        @Test
+        void getChargersByStation_invalidId() throws Exception {
+                mockMvc.perform(get("/api/v1/stations/invalidId/chargers"))
+                                .andExpect(status().isBadRequest());
+        }
+
+        @Test
+        void getChargersByStation_noChargers() throws Exception {
+                String stationJson = "{" +
+                                "\"name\": \"Central Station\"," +
+                                "\"address\": \"123 Main St\"," +
+                                "\"latitude\": 40.12345," +
+                                "\"longitude\": -8.54321" +
+                                "}";
+                mockMvc.perform(post("/api/v1/stations")
+                                .contentType(MediaType.APPLICATION_JSON)
+                                .content(stationJson))
+                                .andExpect(status().isCreated());
+
+                mockMvc.perform(get("/api/v1/stations/1/chargers"))
+                                .andExpect(status().isOk())
+                                .andExpect(content().contentType(MediaType.APPLICATION_JSON));
+        }
 }
