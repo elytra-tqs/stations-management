@@ -111,4 +111,59 @@ class StationServiceTest {
         assertNotNull(result.getId());
         assertEquals(1L, result.getId());
     }
+
+    @Test
+    void getStationById_existingId_returnsStation() {
+        Station station = Station.builder()
+                .id(1L)
+                .name("Central Station")
+                .address("123 Main St")
+                .latitude(40.12345)
+                .longitude(-8.54321)
+                .build();
+        when(stationRepository.findById(1L)).thenReturn(java.util.Optional.of(station));
+        Station result = stationService.getStationById(1L);
+        assertEquals(station, result);
+    }
+
+    @Test
+    void getStationById_nonExistingId_throwsException() {
+        when(stationRepository.findById(1L)).thenReturn(java.util.Optional.empty());
+        assertThrows(RuntimeException.class, () -> stationService.getStationById(1L));
+    }
+
+    @Test
+    void getAllStations_returnsListOfStations() {
+        Station station1 = Station.builder()
+                .id(1L)
+                .name("Central Station")
+                .address("123 Main St")
+                .latitude(40.12345)
+                .longitude(-8.54321)
+                .build();
+        Station station2 = Station.builder()
+                .id(2L)
+                .name("North Station")
+                .address("456 North St")
+                .latitude(41.12345)
+                .longitude(-9.54321)
+                .build();
+        List<Station> stations = Arrays.asList(station1, station2);
+        when(stationRepository.findAll()).thenReturn(stations);
+        List<Station> result = stationService.getAllStations();
+        assertEquals(2, result.size());
+        assertEquals(station1, result.get(0));
+        assertEquals(station2, result.get(1));
+    }
+
+    @Test
+    void getAllStations_emptyList_returnsEmptyList() {
+        List<Station> stations = Arrays.asList();
+        when(stationRepository.findAll()).thenReturn(stations);
+        List<Station> result = stationService.getAllStations();
+        assertEquals(0, result.size());
+    }
+
+
+
 }

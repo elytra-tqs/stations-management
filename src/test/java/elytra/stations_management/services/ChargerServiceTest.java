@@ -90,4 +90,5 @@ class ChargerServiceTest {
         verify(chargerRepository).findByStatus(Charger.Status.AVAILABLE);
     }
 
+
 }

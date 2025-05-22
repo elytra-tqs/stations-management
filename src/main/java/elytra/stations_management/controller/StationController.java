@@ -7,12 +7,14 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import elytra.stations_management.models.Station;
+import elytra.stations_management.models.Charger;
 import elytra.stations_management.services.StationService;
 
 @RestController
@@ -37,4 +39,16 @@ public class StationController {
     public List<Station> getAllStations() {
         return stationService.getAllStations();
     }
+
+    @GetMapping(value = "/{stationId}/chargers", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<List<Charger>> getChargersByStation(@PathVariable Long stationId) {
+        try {
+            Station station = stationService.getStationById(stationId);
+            return ResponseEntity.ok(station.getChargers());
+        } catch (RuntimeException e) {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+
 }
