@@ -164,6 +164,34 @@ class StationServiceTest {
         assertEquals(0, result.size());
     }
 
+    @Test
+    void addChargerToStation_addsChargerToStation() {
+        Station station = Station.builder()
+                .id(1L)
+                .name("Central Station")
+                .address("123 Main St")
+                .latitude(40.12345)
+                .longitude(-8.54321)
+                .chargers(new java.util.ArrayList<>())
+                .build();
+
+        Charger charger = Charger.builder()
+                .type("CCS")
+                .power(50.0)
+                .status(Charger.Status.AVAILABLE)
+                .build();
+
+        when(stationRepository.findById(1L)).thenReturn(java.util.Optional.of(station));
+        when(stationRepository.save(station)).thenReturn(station);
+
+        Charger result = stationService.addChargerToStation(1L, charger);
+
+        assertEquals(charger, result);
+        assertEquals(station, charger.getStation());
+        assertTrue(station.getChargers().contains(charger));
+        verify(stationRepository).save(station);
+    }
+
 
 
 }

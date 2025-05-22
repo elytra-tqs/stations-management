@@ -162,4 +162,46 @@ class StationControllerTest {
                 mockMvc.perform(get("/api/v1/stations/999/chargers"))
                         .andExpect(status().isNotFound());
         }
+
+        @Test
+        void createChargerForStation_shouldReturn201() throws Exception {
+            String stationJson = "{" +
+                    "\"name\": \"North Station\"," +
+                    "\"address\": \"789 Elm St\"," +
+                    "\"latitude\": 41.12345," +
+                    "\"longitude\": -7.54321" +
+                    "}";
+
+            mockMvc.perform(post("/api/v1/stations")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(stationJson))
+                    .andExpect(status().isCreated());
+
+            String chargerJson = "{" +
+                    "\"type\": \"Type2\"," +
+                    "\"power\": 22.0" +
+                    "}";
+
+            mockMvc.perform(post("/api/v1/stations/1/chargers")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(chargerJson))
+                    .andExpect(status().isCreated())
+                    .andExpect(content().contentType(MediaType.APPLICATION_JSON));
+        }
+
+        @Test
+        void createChargerForInvalidStation_shouldReturn404() throws Exception {
+            String chargerJson = "{" +
+                    "\"type\": \"Type2\"," +
+                    "\"power\": 22.0" +
+                    "}";
+
+            mockMvc.perform(post("/api/v1/stations/999/chargers")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(chargerJson))
+                    .andExpect(status().isNotFound());
+        }
+
+
+
 }

@@ -50,5 +50,14 @@ public class StationController {
         }
     }
 
+    @PostMapping(value = "/{stationId}/chargers", consumes = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<Charger> createCharger(@PathVariable Long stationId, @RequestBody Charger charger) {
+        try {
+            Charger createdCharger = stationService.addChargerToStation(stationId, charger);
+            return ResponseEntity.status(HttpStatus.CREATED).body(createdCharger);
+        } catch (RuntimeException e) {
+            return ResponseEntity.notFound().build();
+        }
+    }
 
 }

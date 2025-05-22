@@ -33,4 +33,14 @@ public class StationService {
         return stationRepository.findById(stationId)
                 .orElseThrow(() -> new RuntimeException("Station not found"));
     }
+
+    @Transactional
+    public Charger addChargerToStation(Long stationId, Charger charger) {
+        Station station = getStationById(stationId);
+        charger.setStation(station);
+
+        station.getChargers().add(charger);
+        stationRepository.save(station);
+        return charger;
+    }
 }
