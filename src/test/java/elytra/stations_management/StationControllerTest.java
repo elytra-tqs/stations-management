@@ -156,4 +156,10 @@ class StationControllerTest {
                                 .andExpect(status().isOk())
                                 .andExpect(content().contentType(MediaType.APPLICATION_JSON));
         }
+
+        @Test
+        void getChargersByStation_stationNotFound_returns404() throws Exception {
+                mockMvc.perform(get("/api/v1/stations/999/chargers"))
+                        .andExpect(status().isNotFound());
+        }
 }

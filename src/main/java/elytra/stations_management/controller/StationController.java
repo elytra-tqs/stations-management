@@ -42,11 +42,12 @@ public class StationController {
 
     @GetMapping(value = "/{stationId}/chargers", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<List<Charger>> getChargersByStation(@PathVariable Long stationId) {
-        Station station = stationService.getStationById(stationId);
-        if (station == null) {
+        try {
+            Station station = stationService.getStationById(stationId);
+            return ResponseEntity.ok(station.getChargers());
+        } catch (RuntimeException e) {
             return ResponseEntity.notFound().build();
         }
-        return ResponseEntity.ok(station.getChargers());
     }
 
 
