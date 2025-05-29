@@ -7,6 +7,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -40,6 +42,16 @@ public class StationController {
         return stationService.getAllStations();
     }
 
+    @GetMapping(value = "/{stationId}", produces = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<Station> getStationById(@PathVariable Long stationId) {
+        try {
+            Station station = stationService.getStationById(stationId);
+            return ResponseEntity.ok(station);
+        } catch (RuntimeException e) {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
     @GetMapping(value = "/{stationId}/chargers", produces = MediaType.APPLICATION_JSON_VALUE)
     public ResponseEntity<List<Charger>> getChargersByStation(@PathVariable Long stationId) {
         try {
@@ -55,6 +67,26 @@ public class StationController {
         try {
             Charger createdCharger = stationService.addChargerToStation(stationId, charger);
             return ResponseEntity.status(HttpStatus.CREATED).body(createdCharger);
+        } catch (RuntimeException e) {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+    @PutMapping(value = "/{stationId}", consumes = MediaType.APPLICATION_JSON_VALUE)
+    public ResponseEntity<Station> updateStation(@PathVariable Long stationId, @RequestBody Station station) {
+        try {
+            Station updatedStation = stationService.updateStation(stationId, station);
+            return ResponseEntity.ok(updatedStation);
+        } catch (RuntimeException e) {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
+    @DeleteMapping(value = "/{stationId}")
+    public ResponseEntity<Void> deleteStation(@PathVariable Long stationId) {
+        try {
+            stationService.deleteStation(stationId);
+            return ResponseEntity.noContent().build();
         } catch (RuntimeException e) {
             return ResponseEntity.notFound().build();
         }

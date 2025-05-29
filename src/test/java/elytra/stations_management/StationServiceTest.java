@@ -1,5 +1,6 @@
 package elytra.stations_management;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
@@ -31,6 +32,7 @@ class StationServiceTest {
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
+        stationRepository.deleteAll();
     }
 
     @Test
@@ -192,6 +194,96 @@ class StationServiceTest {
         verify(stationRepository).save(station);
     }
 
+    @Test
+    void updateStation_updatesStationDetails() {
+        Station existingStation = Station.builder()
+                .id(1L)
+                .name("Central Station")
+                .address("123 Main St")
+                .latitude(40.12345)
+                .longitude(-8.54321)
+                .chargers(new java.util.ArrayList<>())
+                .build();
+
+        Station updatedStation = Station.builder()
+                .name("Updated Central Station")
+                .address("456 Updated St")
+                .latitude(41.12345)
+                .longitude(-9.54321)
+                .build();
+
+        when(stationRepository.findById(1L)).thenReturn(java.util.Optional.of(existingStation));
+        when(stationRepository.save(existingStation)).thenReturn(existingStation);
+
+        Station result = stationService.updateStation(1L, updatedStation);
+
+        assertEquals("Updated Central Station", result.getName());
+        assertEquals("456 Updated St", result.getAddress());
+        assertEquals(41.12345, result.getLatitude());
+        assertEquals(-9.54321, result.getLongitude());
+        verify(stationRepository).save(existingStation);
+    }
+
+    @Test
+    void updateStation_shouldReplaceChargersAndSetStationReference() {
+        Station originalStation = Station.builder()
+                .id(1L)
+                .name("Central Station")
+                .address("123 Main St")
+                .latitude(40.12345)
+                .longitude(-8.54321)
+                .build();
+
+        Charger oldCharger = new Charger();
+        oldCharger.setType("Type1");
+        oldCharger.setStation(originalStation);
+
+        originalStation.setChargers(new ArrayList<>(List.of(oldCharger)));
+
+        when(stationRepository.findById(1L)).thenReturn(java.util.Optional.of(originalStation));
+        when(stationRepository.save(originalStation)).thenReturn(originalStation);
+
+
+        Station updateData = Station.builder()
+                .name("Updated Central Station")
+                .address("456 Updated St")
+                .latitude(41.12345)
+                .longitude(-9.54321)
+                .build();
+
+        Charger newCharger1 = new Charger();
+        newCharger1.setType("Type2");
+        Charger newCharger2 = new Charger();
+        newCharger2.setType("Type3");
+        updateData.setChargers(new ArrayList<>(List.of(newCharger1, newCharger2)));
+
+
+        Station updatedStation = stationService.updateStation(1L, updateData);
+
+
+        assertEquals(2, updatedStation.getChargers().size());
+        for (Charger charger : updatedStation.getChargers()) {
+            assertTrue(charger.getType().equals("Type2") || charger.getType().equals("Type3"));
+            assertEquals(updatedStation, charger.getStation());
+        }
+    }
+
+    @Test
+    void deleteStation_deletesExistingStation() {
+        Station station = Station.builder()
+                .id(1L)
+                .name("Central Station")
+                .address("123 Main St")
+                .latitude(40.12345)
+                .longitude(-8.54321)
+                .build();
+
+        when(stationRepository.findById(1L)).thenReturn(java.util.Optional.of(station));
+
+        stationService.deleteStation(1L);
+
+        verify(stationRepository, times(1)).delete(station);
+    }
 
 
 }

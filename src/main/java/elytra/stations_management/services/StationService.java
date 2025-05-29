@@ -43,4 +43,32 @@ public class StationService {
         stationRepository.save(station);
         return charger;
     }
+
+    @Transactional
+    public Station updateStation(Long stationId, Station station) {
+        Station existingStation = getStationById(stationId);
+        existingStation.setName(station.getName());
+        existingStation.setAddress(station.getAddress());
+        existingStation.setLatitude(station.getLatitude());
+        existingStation.setLongitude(station.getLongitude());
+
+
+        existingStation.getChargers().clear();
+        if (station.getChargers() != null) {
+            for (Charger charger : station.getChargers()) {
+                charger.setStation(existingStation);
+                existingStation.getChargers().add(charger);
+            }
+        }
+        stationRepository.save(existingStation);
+
+        return existingStation;
+    }
+
+    @Transactional
+    public void deleteStation(Long stationId) {
+        Station station = stationRepository.findById(stationId)
+                .orElseThrow(() -> new RuntimeException("Station not found"));
+        stationRepository.delete(station);
+    }
 }
