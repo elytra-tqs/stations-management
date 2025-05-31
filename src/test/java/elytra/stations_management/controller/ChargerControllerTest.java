@@ -16,6 +16,7 @@ import java.util.List;
 
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -82,8 +83,76 @@ class ChargerControllerTest {
         when(chargerService.getChargersByAvailability(Charger.Status.AVAILABLE))
                 .thenReturn(chargers);
 
-        mockMvc.perform(get("/api/v1//chargers/availability/AVAILABLE"))
+        mockMvc.perform(get("/api/v1/chargers/availability/AVAILABLE"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].status").value("AVAILABLE"));
+    }
+
+    @Test
+    void updateCharger_ShouldUpdateCharger() throws Exception {
+        Charger updatedCharger = Charger.builder()
+                .type("CCS")
+                .power(100.0)
+                .status(Charger.Status.AVAILABLE)
+                .build();
+
+        when(chargerService.updateCharger(eq(1L), any(Charger.class)))
+                .thenReturn(updatedCharger);
+
+        mockMvc.perform(put("/api/v1/chargers/1")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(updatedCharger)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.type").value("CCS"))
+                .andExpect(jsonPath("$.power").value(100.0))
+                .andExpect(jsonPath("$.status").value("AVAILABLE"));
+    }
+
+    @Test
+    void updateCharger_WhenChargerNotFound_ShouldReturnBadRequest() throws Exception {
+        Charger updatedCharger = Charger.builder()
+                .type("CCS")
+                .power(100.0)
+                .build();
+
+        when(chargerService.updateCharger(eq(1L), any(Charger.class)))
+                .thenThrow(new RuntimeException("Charger not found"));
+
+        mockMvc.perform(put("/api/v1/chargers/1")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(updatedCharger)))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void updateCharger_WhenInvalidStatusTransition_ShouldReturnBadRequest() throws Exception {
+        Charger updatedCharger = Charger.builder()
+                .type("CCS")
+                .power(100.0)
+                .status(Charger.Status.BEING_USED)
+                .build();
+
+        when(chargerService.updateCharger(eq(1L), any(Charger.class)))
+                .thenThrow(new RuntimeException("Invalid status transition"));
+
+        mockMvc.perform(put("/api/v1/chargers/1")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(updatedCharger)))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void deleteCharger_ShouldReturnNoContent() throws Exception {
+        mockMvc.perform(delete("/api/v1/chargers/1"))
+                .andExpect(status().isNoContent());
+    }
+
+    @Test
+    void deleteCharger_WhenChargerNotFound_ShouldReturnNotFound() throws Exception {
+        doThrow(new RuntimeException("Charger not found"))
+                .when(chargerService).deleteCharger(1L);
+
+        mockMvc.perform(delete("/api/v1/chargers/1"))
+                .andExpect(status().isNotFound());
     }
 }

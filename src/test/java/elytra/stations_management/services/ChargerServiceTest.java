@@ -90,5 +90,64 @@ class ChargerServiceTest {
         verify(chargerRepository).findByStatus(Charger.Status.AVAILABLE);
     }
 
+    @Test
+    void updateCharger_ShouldUpdateChargerDetails() {
+        when(chargerRepository.findById(1L)).thenReturn(Optional.of(charger));
+        when(chargerRepository.save(any(Charger.class))).thenReturn(charger);
 
+        Charger updatedCharger = Charger.builder()
+                .type("CCS")
+                .power(100.0)
+                .status(Charger.Status.AVAILABLE)
+                .build();
+
+        Charger result = chargerService.updateCharger(1L, updatedCharger);
+
+        assertEquals("CCS", result.getType());
+        assertEquals(100.0, result.getPower());
+        verify(chargerRepository).save(charger);
+    }
+
+    @Test
+    void updateCharger_WhenChargerNotFound_ShouldThrowException() {
+        when(chargerRepository.findById(1L)).thenReturn(Optional.empty());
+
+        Charger updatedCharger = Charger.builder()
+                .type("CCS")
+                .power(100.0)
+                .build();
+
+        assertThrows(RuntimeException.class, () -> chargerService.updateCharger(1L, updatedCharger));
+    }
+
+    @Test
+    void updateCharger_WithStatus_ShouldValidateTransition() {
+        charger.setStatus(Charger.Status.OUT_OF_SERVICE);
+        when(chargerRepository.findById(1L)).thenReturn(Optional.of(charger));
+
+        Charger updatedCharger = Charger.builder()
+                .type("CCS")
+                .power(100.0)
+                .status(Charger.Status.BEING_USED)
+                .build();
+
+        assertThrows(InvalidStatusTransitionException.class,
+                () -> chargerService.updateCharger(1L, updatedCharger));
+    }
+
+    @Test
+    void deleteCharger_ShouldDeleteCharger() {
+        when(chargerRepository.findById(1L)).thenReturn(Optional.of(charger));
+
+        chargerService.deleteCharger(1L);
+
+        verify(chargerRepository).delete(charger);
+    }
+
+    @Test
+    void deleteCharger_WhenChargerNotFound_ShouldThrowException() {
+        when(chargerRepository.findById(1L)).thenReturn(Optional.empty());
+
+        assertThrows(RuntimeException.class, () -> chargerService.deleteCharger(1L));
+    }
 }
