@@ -6,6 +6,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -39,5 +40,26 @@ public class ChargerController {
     @GetMapping("/availability/{status}")
     public ResponseEntity<List<Charger>> getChargersByAvailability(@PathVariable Charger.Status status) {
         return ResponseEntity.ok(chargerService.getChargersByAvailability(status));
+    }
+
+    @PutMapping("/{chargerId}")
+    public ResponseEntity<Charger> updateCharger(
+            @PathVariable Long chargerId,
+            @RequestBody Charger charger) {
+        try {
+            return ResponseEntity.ok(chargerService.updateCharger(chargerId, charger));
+        } catch (RuntimeException e) {
+            return ResponseEntity.badRequest().build();
+        }
+    }
+
+    @DeleteMapping("/{chargerId}")
+    public ResponseEntity<Void> deleteCharger(@PathVariable Long chargerId) {
+        try {
+            chargerService.deleteCharger(chargerId);
+            return ResponseEntity.noContent().build();
+        } catch (RuntimeException e) {
+            return ResponseEntity.notFound().build();
+        }
     }
 }

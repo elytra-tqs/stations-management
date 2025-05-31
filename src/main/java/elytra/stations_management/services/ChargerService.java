@@ -40,6 +40,28 @@ public class ChargerService {
         return chargerRepository.findByStatus(status);
     }
 
+    @Transactional
+    public Charger updateCharger(Long chargerId, Charger updatedCharger) {
+        Charger existingCharger = chargerRepository.findById(chargerId)
+                .orElseThrow(() -> new RuntimeException("Charger not found"));
+
+        existingCharger.setType(updatedCharger.getType());
+        existingCharger.setPower(updatedCharger.getPower());
+        
+        if (updatedCharger.getStatus() != null) {
+            validateStatusTransition(existingCharger.getStatus(), updatedCharger.getStatus());
+            existingCharger.setStatus(updatedCharger.getStatus());
+        }
+
+        return chargerRepository.save(existingCharger);
+    }
+
+    @Transactional
+    public void deleteCharger(Long chargerId) {
+        Charger charger = chargerRepository.findById(chargerId)
+                .orElseThrow(() -> new RuntimeException("Charger not found"));
+        chargerRepository.delete(charger);
+    }
 
     private void validateStatusTransition(Charger.Status currentStatus,
             Charger.Status newStatus) {
