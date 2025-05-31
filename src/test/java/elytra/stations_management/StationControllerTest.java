@@ -1,13 +1,18 @@
 package elytra.stations_management;
 
+import com.jayway.jsonpath.JsonPath;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
+
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -112,24 +117,29 @@ class StationControllerTest {
 
         @Test
         void getChargersByStation() throws Exception {
-                String stationJson = "{" +
-                                "\"name\": \"Central Station\"," +
-                                "\"address\": \"123 Main St\"," +
-                                "\"latitude\": 40.12345," +
-                                "\"longitude\": -8.54321," +
-                                "\"chargers\": [" +
-                                "{\"type\": \"Type2\", \"power\": 22.0}," +
-                                "{\"type\": \"CCS\", \"power\": 50.0}" +
-                                "]" +
-                                "}";
-                mockMvc.perform(post("/api/v1/stations")
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .content(stationJson))
-                                .andExpect(status().isCreated());
+            String stationJson = "{" +
+                    "\"name\": \"Central Station\"," +
+                    "\"address\": \"123 Main St\"," +
+                    "\"latitude\": 40.12345," +
+                    "\"longitude\": -8.54321," +
+                    "\"chargers\": [" +
+                    "{\"type\": \"Type2\", \"power\": 22.0}," +
+                    "{\"type\": \"CCS\", \"power\": 50.0}" +
+                    "]" +
+                    "}";
 
-                mockMvc.perform(get("/api/v1/stations/1/chargers"))
-                                .andExpect(status().isOk())
-                                .andExpect(content().contentType(MediaType.APPLICATION_JSON));
+            MvcResult result = mockMvc.perform(post("/api/v1/stations")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(stationJson))
+                    .andExpect(status().isCreated())
+                    .andReturn();
+
+            String responseBody = result.getResponse().getContentAsString();
+            int stationId = JsonPath.read(responseBody, "$.id");
+
+            mockMvc.perform(get("/api/v1/stations/" + stationId + "/chargers"))
+                    .andExpect(status().isOk())
+                    .andExpect(content().contentType(MediaType.APPLICATION_JSON));
         }
 
 
@@ -140,21 +150,32 @@ class StationControllerTest {
         }
 
         @Test
-        void getChargersByStation_noChargers() throws Exception {
-                String stationJson = "{" +
-                                "\"name\": \"Central Station\"," +
-                                "\"address\": \"123 Main St\"," +
-                                "\"latitude\": 40.12345," +
-                                "\"longitude\": -8.54321" +
-                                "}";
-                mockMvc.perform(post("/api/v1/stations")
-                                .contentType(MediaType.APPLICATION_JSON)
-                                .content(stationJson))
-                                .andExpect(status().isCreated());
+        void getStation_invalidId_shouldReturn404() throws Exception {
+            mockMvc.perform(get("/api/v1/stations/999"))
+                    .andExpect(status().isNotFound());
+        }
 
-                mockMvc.perform(get("/api/v1/stations/1/chargers"))
-                                .andExpect(status().isOk())
-                                .andExpect(content().contentType(MediaType.APPLICATION_JSON));
+        @Test
+        void getChargersByStation_noChargers() throws Exception {
+            String stationJson = "{" +
+                    "\"name\": \"Central Station\"," +
+                    "\"address\": \"123 Main St\"," +
+                    "\"latitude\": 40.12345," +
+                    "\"longitude\": -8.54321" +
+                    "}";
+
+            MvcResult result = mockMvc.perform(post("/api/v1/stations")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(stationJson))
+                    .andExpect(status().isCreated())
+                    .andReturn();
+
+            String responseBody = result.getResponse().getContentAsString();
+            int stationId = JsonPath.read(responseBody, "$.id");
+
+            mockMvc.perform(get("/api/v1/stations/" + stationId + "/chargers"))
+                    .andExpect(status().isOk())
+                    .andExpect(content().contentType(MediaType.APPLICATION_JSON));
         }
 
         @Test
@@ -203,5 +224,79 @@ class StationControllerTest {
         }
 
 
+        @Test
+        void updateStation_shouldReturn200() throws Exception {
+            String stationJson = "{" +
+                    "\"name\": \"East Station\"," +
+                    "\"address\": \"456 Oak St\"," +
+                    "\"latitude\": 42.12345," +
+                    "\"longitude\": -6.54321" +
+                    "}";
+
+            MvcResult result = mockMvc.perform(post("/api/v1/stations")
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(stationJson))
+                    .andExpect(status().isCreated())
+                    .andReturn();
+
+            String responseBody = result.getResponse().getContentAsString();
+            // Extract the ID from the JSON response
+            int stationId = JsonPath.read(responseBody, "$.id");
+
+            String updatedStationJson = "{" +
+                    "\"name\": \"Updated East Station\"," +
+                    "\"address\": \"456 Oak St Updated\"," +
+                    "\"latitude\": 42.54321," +
+                    "\"longitude\": -6.12345" +
+                    "}";
+
+            mockMvc.perform(put("/api/v1/stations/" + stationId)
+                            .contentType(MediaType.APPLICATION_JSON)
+                            .content(updatedStationJson))
+                    .andExpect(status().isOk())
+                    .andExpect(content().contentType(MediaType.APPLICATION_JSON));
+        }
+
+        @Test
+        void updateStation_invalidId_shouldReturn404() throws Exception {
+            String updatedStationJson = "{" +
+                    "\"name\": \"Updated Station\"," +
+                    "\"address\": \"456 Oak St Updated\"," +
+                    "\"latitude\": 42.54321," +
+                    "\"longitude\": -6.12345" +
+                    "}";
+
+            mockMvc.perform(put("/api/v1/stations/999")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(updatedStationJson))
+                    .andExpect(status().isNotFound());
+        }
+
+        @Test
+        void deleteStation_shouldReturn204() throws Exception {
+            String stationJson = "{" +
+                    "\"name\": \"South Station\"," +
+                    "\"address\": \"321 Pine St\"," +
+                    "\"latitude\": 43.12345," +
+                    "\"longitude\": -5.54321" +
+                    "}";
+
+            mockMvc.perform(post("/api/v1/stations")
+                    .contentType(MediaType.APPLICATION_JSON)
+                    .content(stationJson))
+                    .andExpect(status().isCreated());
+
+            mockMvc.perform(get("/api/v1/stations/1"))
+                    .andExpect(status().isOk());
+
+            mockMvc.perform(delete("/api/v1/stations/1"))
+                    .andExpect(status().isNoContent());
+        }
+
+        @Test
+        void deleteStation_invalidId_shouldReturn404() throws Exception {
+            mockMvc.perform(delete("/api/v1/stations/999"))
+                    .andExpect(status().isNotFound());
+        }
 
 }
