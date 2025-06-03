@@ -3,6 +3,7 @@ package elytra.stations_management.controller;
 import java.util.List;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -39,5 +40,18 @@ public class ChargerController {
     @GetMapping("/availability/{status}")
     public ResponseEntity<List<Charger>> getChargersByAvailability(@PathVariable Charger.Status status) {
         return ResponseEntity.ok(chargerService.getChargersByAvailability(status));
+    }
+
+    @DeleteMapping("/chargers/{id}")
+    public ResponseEntity<Void> deleteCharger(@PathVariable Long id) {
+        chargerService.deleteCharger(id);
+        return ResponseEntity.noContent().build();
+    }
+    
+
+    @PutMapping("/chargers/{id}")
+    public ResponseEntity<Charger> updateCharger(@PathVariable Long id, @RequestBody Charger charger) {
+        Charger updatedCharger = chargerService.updateCharger(id, charger);
+        return ResponseEntity.ok(updatedCharger);
     }
 }

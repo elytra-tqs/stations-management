@@ -90,5 +90,46 @@ class ChargerServiceTest {
         verify(chargerRepository).findByStatus(Charger.Status.AVAILABLE);
     }
 
+    @Test
+    void deleteCharger_ShouldDeleteCharger() {
+        when(chargerRepository.findById(1L)).thenReturn(Optional.of(charger));
+
+        chargerService.deleteCharger(1L);
+
+        verify(chargerRepository).deleteById(1L);
+    }
+
+    @Test
+    void updateCharger_ShouldUpdateCharger() {
+        Charger updatedCharger = Charger.builder()
+                .id(1L)
+                .type("Type 2")
+                .power(75.0)
+                .status(Charger.Status.AVAILABLE)
+                .build();
+
+        when(chargerRepository.findById(1L)).thenReturn(Optional.of(charger));
+        when(chargerRepository.save(any(Charger.class))).thenReturn(updatedCharger);
+
+        Charger result = chargerService.updateCharger(1L, updatedCharger);
+
+        assertEquals(updatedCharger, result);
+        verify(chargerRepository).save(updatedCharger);
+    }
+
+    @Test
+    void updateCharger_WhenChargerNotFound_ShouldThrowException() {
+        when(chargerRepository.findById(1L)).thenReturn(Optional.empty());
+
+        Charger updatedCharger = Charger.builder()
+                .id(1L)
+                .type("Type 2")
+                .power(75.0)
+                .status(Charger.Status.AVAILABLE)
+                .build();
+
+        assertThrows(RuntimeException.class, () -> chargerService.updateCharger(1L, updatedCharger));
+    }
+
 
 }

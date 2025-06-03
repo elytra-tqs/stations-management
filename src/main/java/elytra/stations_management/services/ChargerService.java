@@ -40,6 +40,19 @@ public class ChargerService {
         return chargerRepository.findByStatus(status);
     }
 
+    public void deleteCharger(Long id) {
+        chargerRepository.deleteById(id);
+    }
+
+    public Charger updateCharger(Long id, Charger charger) {
+        Charger existingCharger = chargerRepository.findById(id)
+            .orElseThrow(() -> new ResourceNotFoundException("Charger not found"));
+
+        existingCharger.setType(charger.getType());
+        existingCharger.setPower(charger.getPower());
+        
+        return chargerRepository.save(existingCharger);
+    }
 
     private void validateStatusTransition(Charger.Status currentStatus,
             Charger.Status newStatus) {

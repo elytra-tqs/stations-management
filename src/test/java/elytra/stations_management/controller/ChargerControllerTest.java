@@ -86,4 +86,49 @@ class ChargerControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$[0].status").value("AVAILABLE"));
     }
+
+    @Test
+    void deleteCharger_ShouldReturnNoContent() throws Exception {
+        mockMvc.perform(delete("/api/v1/chargers/1"))
+                .andExpect(status().isNoContent());
+    }
+
+    @Test
+    void updateCharger_ShouldReturnUpdatedCharger() throws Exception {
+        Charger updatedCharger = Charger.builder()
+                .id(1L)
+                .type("Type 2")
+                .power(75.0)
+                .status(Charger.Status.AVAILABLE)
+                .build();
+
+        when(chargerService.updateCharger(eq(1L), any(Charger.class))).thenReturn(updatedCharger);
+
+        mockMvc.perform(put("/api/v1/chargers/1")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(updatedCharger)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.power").value(75.0));
+    }
+
+    @Test
+    void updateCharger_WhenNotFound_ShouldReturnNotFound() throws Exception {
+        when(chargerService.updateCharger(eq(1L), any(Charger.class)))
+                .thenThrow(new RuntimeException("Charger not found"));
+
+        mockMvc.perform(put("/api/v1/chargers/1")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(charger)))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void getChargersByAvailability_WhenNoChargers_ShouldReturnEmptyList() throws Exception {
+        when(chargerService.getChargersByAvailability(Charger.Status.AVAILABLE))
+                .thenReturn(Arrays.asList());
+
+        mockMvc.perform(get("/api/v1/chargers/availability/AVAILABLE"))
+                .andExpect(status().isOk())
+                .andExpect(content().json("[]"));
+    }
 }
