@@ -55,28 +55,133 @@ class ChargerTest {
     }
 
     @Test
-    void testEqualsAndHashCode() {
-        Station station1 = new Station();
-        station1.setId(1L);
-        Station station2 = new Station();
-        station2.setId(1L);
-        Station station3 = new Station();
-        station3.setId(2L);
+    void testEquals_SameObject() {
+        Station station = Station.builder().id(1L).build();
+        Charger charger1 = Charger.builder().id(1L).type("TypeA").power(10.0).status(Charger.Status.AVAILABLE).station(station).build();
+        assertTrue(charger1.equals(charger1));
+    }
+
+    @Test
+    void testEquals_DifferentObjectsSameValues() {
+        Station station1 = Station.builder().id(1L).build();
+        Station station2 = Station.builder().id(1L).build();
 
         Charger charger1 = Charger.builder().id(1L).type("TypeA").power(10.0).status(Charger.Status.AVAILABLE).station(station1).build();
         Charger charger2 = Charger.builder().id(1L).type("TypeA").power(10.0).status(Charger.Status.AVAILABLE).station(station2).build();
-        Charger charger3 = Charger.builder().id(2L).type("TypeB").power(20.0).status(Charger.Status.BEING_USED).station(station3).build();
 
-        // Test equality
-        assertTrue(charger1.equals(charger1)); // Reflexive
-        assertTrue(charger1.equals(charger2)); // Symmetric
-        assertTrue(charger2.equals(charger1)); // Symmetric
-        assertFalse(charger1.equals(charger3)); // Different object
-        assertFalse(charger1.equals(null)); // Vs null
-        assertFalse(charger1.equals("string")); // Vs different type
+        assertTrue(charger1.equals(charger2));
+    }
 
-        // Test hashCode
-        assertEquals(charger1.hashCode(), charger2.hashCode()); // Equal objects have same hash code
+    @Test
+    void testEquals_DifferentObjectsDifferentIds() {
+        Station station1 = Station.builder().id(1L).build();
+        Station station2 = Station.builder().id(1L).build();
+
+        Charger charger1 = Charger.builder().id(1L).type("TypeA").power(10.0).status(Charger.Status.AVAILABLE).station(station1).build();
+        Charger charger2 = Charger.builder().id(2L).type("TypeA").power(10.0).status(Charger.Status.AVAILABLE).station(station2).build();
+
+        assertFalse(charger1.equals(charger2));
+    }
+
+    @Test
+    void testEquals_DifferentObjectsDifferentTypes() {
+        Station station1 = Station.builder().id(1L).build();
+        Station station2 = Station.builder().id(1L).build();
+
+        Charger charger1 = Charger.builder().id(1L).type("TypeA").power(10.0).status(Charger.Status.AVAILABLE).station(station1).build();
+        Charger charger2 = Charger.builder().id(1L).type("TypeB").power(10.0).status(Charger.Status.AVAILABLE).station(station2).build();
+
+        assertFalse(charger1.equals(charger2));
+    }
+
+    @Test
+    void testEquals_DifferentObjectsDifferentPower() {
+        Station station1 = Station.builder().id(1L).build();
+        Station station2 = Station.builder().id(1L).build();
+
+        Charger charger1 = Charger.builder().id(1L).type("TypeA").power(10.0).status(Charger.Status.AVAILABLE).station(station1).build();
+        Charger charger2 = Charger.builder().id(1L).type("TypeA").power(20.0).status(Charger.Status.AVAILABLE).station(station2).build();
+
+        assertFalse(charger1.equals(charger2));
+    }
+
+    @Test
+    void testEquals_DifferentObjectsDifferentStatus() {
+        Station station1 = Station.builder().id(1L).build();
+        Station station2 = Station.builder().id(1L).build();
+
+        Charger charger1 = Charger.builder().id(1L).type("TypeA").power(10.0).status(Charger.Status.AVAILABLE).station(station1).build();
+        Charger charger2 = Charger.builder().id(1L).type("TypeA").power(10.0).status(Charger.Status.BEING_USED).station(station2).build();
+
+        assertFalse(charger1.equals(charger2));
+    }
+
+    @Test
+    void testEquals_DifferentObjectsDifferentStations() {
+        Station station1 = Station.builder().id(1L).build();
+        Station station2 = Station.builder().id(2L).build();
+
+        Charger charger1 = Charger.builder().id(1L).type("TypeA").power(10.0).status(Charger.Status.AVAILABLE).station(station1).build();
+        Charger charger2 = Charger.builder().id(1L).type("TypeA").power(10.0).status(Charger.Status.AVAILABLE).station(station2).build();
+
+        assertFalse(charger1.equals(charger2));
+    }
+
+    @Test
+    void testEquals_VsNull() {
+        Charger charger = Charger.builder().build();
+        assertFalse(charger.equals(null));
+    }
+
+    @Test
+    void testEquals_VsDifferentType() {
+        Charger charger = Charger.builder().build();
+        assertFalse(charger.equals("a string"));
+    }
+
+    @Test
+    void testEquals_WithNullFields() {
+        Station station1 = Station.builder().id(1L).build();
+        Station station2 = Station.builder().id(1L).build();
+        
+        // Test with null type
+        Charger charger1 = Charger.builder().id(1L).type(null).power(10.0).status(Charger.Status.AVAILABLE).station(station1).build();
+        Charger charger2 = Charger.builder().id(1L).type(null).power(10.0).status(Charger.Status.AVAILABLE).station(station2).build();
+        Charger charger3 = Charger.builder().id(1L).type("TypeA").power(10.0).status(Charger.Status.AVAILABLE).station(station1).build();
+        assertTrue(charger1.equals(charger2));
+        assertFalse(charger1.equals(charger3));
+
+        // Test with null status
+        Charger charger4 = Charger.builder().id(1L).type("TypeA").power(10.0).status(null).station(station1).build();
+        Charger charger5 = Charger.builder().id(1L).type("TypeA").power(10.0).status(null).station(station2).build();
+         Charger charger6 = Charger.builder().id(1L).type("TypeA").power(10.0).status(Charger.Status.AVAILABLE).station(station1).build();
+        assertTrue(charger4.equals(charger5));
+        assertFalse(charger4.equals(charger6));
+
+         // Test with null station
+         Charger charger7 = Charger.builder().id(1L).type("TypeA").power(10.0).status(Charger.Status.AVAILABLE).station(null).build();
+        Charger charger8 = Charger.builder().id(1L).type("TypeA").power(10.0).status(Charger.Status.AVAILABLE).station(null).build();
+         Charger charger9 = Charger.builder().id(1L).type("TypeA").power(10.0).status(Charger.Status.AVAILABLE).station(station1).build();
+        assertTrue(charger7.equals(charger8));
+        assertFalse(charger7.equals(charger9));
+    }
+
+    @Test
+    void testHashCode_SameObjects() {
+        Station station1 = Station.builder().id(1L).build();
+        Station station2 = Station.builder().id(1L).build();
+
+        Charger charger1 = Charger.builder().id(1L).type("TypeA").power(10.0).status(Charger.Status.AVAILABLE).station(station1).build();
+        Charger charger2 = Charger.builder().id(1L).type("TypeA").power(10.0).status(Charger.Status.AVAILABLE).station(station2).build();
+
+        assertEquals(charger1.hashCode(), charger2.hashCode());
+    }
+
+    @Test
+    void testCanEqual_SameType() {
+        Charger charger1 = Charger.builder().id(1L).build();
+        Charger charger2 = Charger.builder().id(2L).build();
+        assertTrue(charger1.canEqual(charger2));
     }
 
     @Test
@@ -90,12 +195,5 @@ class ChargerTest {
         assertTrue(toStringResult.contains("id=1"));
         assertTrue(toStringResult.contains("type=TypeA"));
         assertTrue(toStringResult.contains("status=AVAILABLE"));
-    }
-
-    @Test
-    void testCanEqual() {
-        Charger charger1 = Charger.builder().id(1L).build();
-        Charger charger2 = Charger.builder().id(2L).build();
-        assertTrue(charger1.canEqual(charger2));
     }
 } 

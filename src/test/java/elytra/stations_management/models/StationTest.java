@@ -44,21 +44,66 @@ class StationTest {
     }
 
     @Test
-    void testEqualsAndHashCode() {
-        Station station1 = Station.builder().id(1L).name("Station A").address("Address A").latitude(10.0).longitude(20.0).build();
-        Station station2 = Station.builder().id(1L).name("Station A").address("Address A").latitude(10.0).longitude(20.0).build();
-        Station station3 = Station.builder().id(2L).name("Station B").address("Address B").latitude(30.0).longitude(40.0).build();
+    void testEquals_SameObject() {
+        Station station1 = Station.builder().id(1L).name("Station A").build();
+        assertTrue(station1.equals(station1));
+    }
 
-        // Test equality
-        assertTrue(station1.equals(station1)); // Reflexive
-        assertTrue(station1.equals(station2)); // Symmetric
-        assertTrue(station2.equals(station1)); // Symmetric
-        assertFalse(station1.equals(station3)); // Different object
-        assertFalse(station1.equals(null)); // Vs null
-        assertFalse(station1.equals("string")); // Vs different type
+    @Test
+    void testEquals_DifferentObjectsSameValues() {
+        Station station1 = Station.builder().id(1L).name("Station A").build();
+        Station station2 = Station.builder().id(1L).name("Station A").build();
+        assertTrue(station1.equals(station2));
+    }
 
-        // Test hashCode
-        assertEquals(station1.hashCode(), station2.hashCode()); // Equal objects have same hash code
+    @Test
+    void testEquals_DifferentObjectsDifferentIds() {
+        Station station1 = Station.builder().id(1L).name("Station A").build();
+        Station station2 = Station.builder().id(2L).name("Station A").build();
+        assertFalse(station1.equals(station2));
+    }
+
+    @Test
+    void testEquals_DifferentObjectsDifferentNames() {
+        Station station1 = Station.builder().id(1L).name("Station A").build();
+        Station station2 = Station.builder().id(1L).name("Station B").build();
+        assertFalse(station1.equals(station2));
+    }
+
+    @Test
+    void testEquals_VsNull() {
+        Station station = Station.builder().build();
+        assertFalse(station.equals(null));
+    }
+
+    @Test
+    void testEquals_VsDifferentType() {
+        Station station = Station.builder().build();
+        assertFalse(station.equals("a string"));
+    }
+
+    @Test
+    void testEquals_WithNullFields() {
+        Station station1 = Station.builder().id(1L).name(null).address("Address A").latitude(10.0).longitude(20.0).build();
+        Station station2 = Station.builder().id(1L).name(null).address("Address A").latitude(10.0).longitude(20.0).build();
+        Station station3 = Station.builder().id(1L).name("Station A").address("Address A").latitude(10.0).longitude(20.0).build();
+
+        assertTrue(station1.equals(station2));
+        assertFalse(station1.equals(station3));
+    }
+
+    @Test
+    void testHashCode_SameObjects() {
+        Station station1 = Station.builder().id(1L).name("Station A").build();
+        Station station2 = Station.builder().id(1L).name("Station A").build();
+        assertEquals(station1.hashCode(), station2.hashCode());
+    }
+
+    @Test
+    void testCanEqual_SameType() {
+        Station station1 = Station.builder().id(1L).build();
+        Station station2 = Station.builder().id(2L).build();
+        assertTrue(station1.canEqual(station2));
     }
 
     @Test
@@ -69,12 +114,5 @@ class StationTest {
         assertTrue(toStringResult.contains("Station"));
         assertTrue(toStringResult.contains("id=1"));
         assertTrue(toStringResult.contains("name=Station A"));
-    }
-
-    @Test
-    void testCanEqual() {
-        Station station1 = Station.builder().id(1L).build();
-        Station station2 = Station.builder().id(2L).build();
-        assertTrue(station1.canEqual(station2));
     }
 } 
