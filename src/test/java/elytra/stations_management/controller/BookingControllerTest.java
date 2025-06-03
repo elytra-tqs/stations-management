@@ -160,6 +160,17 @@ class BookingControllerTest {
     }
 
     @Test
+    void updateBookingStatus_WhenServiceThrowsException_ShouldReturnBadRequest() throws Exception {
+        when(bookingService.updateBookingStatus(eq(1L), any(Booking.Status.class)))
+                .thenThrow(new RuntimeException("Unexpected error"));
+
+        mockMvc.perform(put("/api/v1/bookings/1/status")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("\"CONFIRMED\""))
+                .andExpect(status().isBadRequest());
+    }
+
+    @Test
     void deleteBooking_ShouldReturnNoContent() throws Exception {
         mockMvc.perform(delete("/api/v1/bookings/1"))
                 .andExpect(status().isNoContent());

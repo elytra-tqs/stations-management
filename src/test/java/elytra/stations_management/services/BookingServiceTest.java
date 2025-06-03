@@ -219,4 +219,20 @@ class BookingServiceTest {
 
         assertThrows(RuntimeException.class, () -> bookingService.deleteBooking(1L));
     }
-} 
+
+    @Test
+    void createBooking_WithPastStartTime_ShouldThrowException() {
+        booking.setStartTime(LocalDateTime.now().minusHours(2));
+        booking.setEndTime(LocalDateTime.now().minusHours(1));
+        assertThrows(RuntimeException.class, () -> bookingService.createBooking(booking));
+    }
+
+    @Test
+    void updateBookingStatus_WhenCancelled_ShouldThrowException() {
+        booking.setStatus(Booking.Status.CANCELLED);
+        when(bookingRepository.findById(1L)).thenReturn(Optional.of(booking));
+
+        assertThrows(RuntimeException.class,
+                () -> bookingService.updateBookingStatus(1L, Booking.Status.CONFIRMED));
+    }
+}
