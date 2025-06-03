@@ -15,6 +15,8 @@ import org.mockito.Mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import org.mockito.junit.jupiter.MockitoExtension;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.never;
 
 import elytra.stations_management.exception.InvalidStatusTransitionException;
 import elytra.stations_management.models.Charger;
@@ -149,5 +151,32 @@ class ChargerServiceTest {
         when(chargerRepository.findById(1L)).thenReturn(Optional.empty());
 
         assertThrows(RuntimeException.class, () -> chargerService.deleteCharger(1L));
+    }
+
+    @Test
+    void testGetChargerAvailability_ChargerNotFound() {
+        Long chargerId = 1L;
+        when(chargerRepository.findById(chargerId)).thenReturn(Optional.empty());
+
+        RuntimeException exception = assertThrows(RuntimeException.class,
+                () -> chargerService.getChargerAvailability(chargerId));
+
+        assertEquals("Charger not found", exception.getMessage());
+        verify(chargerRepository, times(1)).findById(chargerId);
+    }
+
+    @Test
+    void testUpdateChargerAvailability_ChargerNotFound() {
+        Long nonExistentChargerId = 99L;
+        Charger.Status newStatus = Charger.Status.BEING_USED;
+
+        when(chargerRepository.findById(nonExistentChargerId)).thenReturn(Optional.empty());
+
+        RuntimeException exception = assertThrows(RuntimeException.class,
+                () -> chargerService.updateChargerAvailability(nonExistentChargerId, newStatus));
+
+        assertEquals("Charger not found", exception.getMessage());
+        verify(chargerRepository, times(1)).findById(nonExistentChargerId);
+        verify(chargerRepository, never()).save(any(Charger.class)); // Ensure save is not called
     }
 }

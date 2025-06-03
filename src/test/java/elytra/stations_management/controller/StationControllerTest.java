@@ -1,4 +1,4 @@
-package elytra.stations_management;
+package elytra.stations_management.controller;
 
 import com.jayway.jsonpath.JsonPath;
 import org.junit.jupiter.api.Test;

@@ -1,4 +1,4 @@
-package elytra.stations_management;
+package elytra.stations_management.repositories;
 
 import java.util.Optional;
 
@@ -9,7 +9,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 
 import elytra.stations_management.models.Station;
-import elytra.stations_management.repositories.StationRepository;
 
 @DataJpaTest
 class StationRepositoryTest {

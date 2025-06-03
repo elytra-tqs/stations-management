@@ -1,4 +1,4 @@
-package elytra.stations_management;
+package elytra.stations_management.services;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -20,7 +20,6 @@ import org.mockito.MockitoAnnotations;
 import elytra.stations_management.models.Charger;
 import elytra.stations_management.models.Station;
 import elytra.stations_management.repositories.StationRepository;
-import elytra.stations_management.services.StationService;
 
 class StationServiceTest {
     @Mock
