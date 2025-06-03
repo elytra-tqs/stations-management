@@ -29,6 +29,7 @@
 	</scm>
 	<properties>
 		<java.version>21</java.version>
+		<jjwt.version>0.11.5</jjwt.version>
 		<sonar.organization>elytra-tqs</sonar.organization>
 		<sonar.host.url>https://sonarcloud.io</sonar.host.url>
 	</properties>
@@ -94,6 +95,26 @@
 		<dependency>
 			<groupId>io.micrometer</groupId>
 			<artifactId>micrometer-registry-prometheus</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>io.jsonwebtoken</groupId>
+			<artifactId>jjwt-api</artifactId>
+			<version>${jjwt.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>io.jsonwebtoken</groupId>
+			<artifactId>jjwt-impl</artifactId>
+			<version>${jjwt.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>io.jsonwebtoken</groupId>
+			<artifactId>jjwt-jackson</artifactId>
+			<version>${jjwt.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework.security</groupId>
+			<artifactId>spring-security-test</artifactId>
+			<scope>test</scope>
 		</dependency>
 	</dependencies>
 
