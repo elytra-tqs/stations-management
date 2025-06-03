@@ -179,9 +179,4 @@ class ChargerServiceTest {
         verify(chargerRepository, times(1)).findById(nonExistentChargerId);
         verify(chargerRepository, never()).save(any(Charger.class)); // Ensure save is not called
     }
-
-    @Test
-    void testUpdateChargerAvailability_ValidTransition() {
-        // ... existing code ...
-    }
 }

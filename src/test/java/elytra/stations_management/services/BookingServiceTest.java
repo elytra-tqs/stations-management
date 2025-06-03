@@ -54,6 +54,9 @@ class BookingServiceTest {
                 .charger(charger)
                 .status(Booking.Status.PENDING)
                 .build();
+
+        // Manually create BookingService with self-injection
+        bookingService = new BookingService(bookingRepository, chargerService, bookingService);
     }
 
     @Test
@@ -190,7 +193,7 @@ class BookingServiceTest {
         booking.setStatus(Booking.Status.COMPLETED);
         when(bookingRepository.findById(1L)).thenReturn(Optional.of(booking));
 
-        assertThrows(RuntimeException.class, 
+        assertThrows(RuntimeException.class,
             () -> bookingService.updateBookingStatus(1L, Booking.Status.PENDING));
     }
 

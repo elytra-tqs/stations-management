@@ -46,40 +46,40 @@ class StationTest {
     @Test
     void testEquals_SameObject() {
         Station station1 = Station.builder().id(1L).name("Station A").build();
-        assertTrue(station1.equals(station1));
+        assertEquals(station1, station1);
     }
 
     @Test
     void testEquals_DifferentObjectsSameValues() {
         Station station1 = Station.builder().id(1L).name("Station A").build();
         Station station2 = Station.builder().id(1L).name("Station A").build();
-        assertTrue(station1.equals(station2));
+        assertEquals(station1, station2);
     }
 
     @Test
     void testEquals_DifferentObjectsDifferentIds() {
         Station station1 = Station.builder().id(1L).name("Station A").build();
         Station station2 = Station.builder().id(2L).name("Station A").build();
-        assertFalse(station1.equals(station2));
+        assertNotEquals(station1, station2);
     }
 
     @Test
     void testEquals_DifferentObjectsDifferentNames() {
         Station station1 = Station.builder().id(1L).name("Station A").build();
         Station station2 = Station.builder().id(1L).name("Station B").build();
-        assertFalse(station1.equals(station2));
+        assertNotEquals(station1, station2);
     }
 
     @Test
     void testEquals_VsNull() {
         Station station = Station.builder().build();
-        assertFalse(station.equals(null));
+        assertNotEquals(null, station);
     }
 
     @Test
     void testEquals_VsDifferentType() {
         Station station = Station.builder().build();
-        assertFalse(station.equals("a string"));
+        assertNotEquals("a string", station);
     }
 
     @Test
@@ -88,8 +88,8 @@ class StationTest {
         Station station2 = Station.builder().id(1L).name(null).address("Address A").latitude(10.0).longitude(20.0).build();
         Station station3 = Station.builder().id(1L).name("Station A").address("Address A").latitude(10.0).longitude(20.0).build();
 
-        assertTrue(station1.equals(station2));
-        assertFalse(station1.equals(station3));
+        assertEquals(station1, station2);
+        assertNotEquals(station1, station3);
     }
 
     @Test

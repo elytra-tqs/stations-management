@@ -1,4 +1,4 @@
-package elytra.stations_management;
+package elytra.stations_management.services;
 
 import java.util.ArrayList;
 import java.util.Arrays;

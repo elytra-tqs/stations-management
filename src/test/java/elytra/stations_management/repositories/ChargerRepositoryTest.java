@@ -1,4 +1,4 @@
-package elytra.stations_management;
+package elytra.stations_management.repositories;
 
 import java.util.List;
 import java.util.Optional;
@@ -16,7 +16,7 @@ import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import elytra.stations_management.repositories.ChargerRepository;
 
 @DataJpaTest
-public class ChargerRepositoryTest {
+class ChargerRepositoryTest {
     @Autowired
     private ChargerRepository chargerRepository;
 

@@ -58,7 +58,7 @@ class ChargerTest {
     void testEquals_SameObject() {
         Station station = Station.builder().id(1L).build();
         Charger charger1 = Charger.builder().id(1L).type("TypeA").power(10.0).status(Charger.Status.AVAILABLE).station(station).build();
-        assertTrue(charger1.equals(charger1));
+        assertEquals(charger1, charger1);
     }
 
     @Test
@@ -69,7 +69,7 @@ class ChargerTest {
         Charger charger1 = Charger.builder().id(1L).type("TypeA").power(10.0).status(Charger.Status.AVAILABLE).station(station1).build();
         Charger charger2 = Charger.builder().id(1L).type("TypeA").power(10.0).status(Charger.Status.AVAILABLE).station(station2).build();
 
-        assertTrue(charger1.equals(charger2));
+        assertEquals(charger1, charger2);
     }
 
     @Test
@@ -80,7 +80,7 @@ class ChargerTest {
         Charger charger1 = Charger.builder().id(1L).type("TypeA").power(10.0).status(Charger.Status.AVAILABLE).station(station1).build();
         Charger charger2 = Charger.builder().id(2L).type("TypeA").power(10.0).status(Charger.Status.AVAILABLE).station(station2).build();
 
-        assertFalse(charger1.equals(charger2));
+        assertNotEquals(charger1, charger2);
     }
 
     @Test
@@ -91,7 +91,7 @@ class ChargerTest {
         Charger charger1 = Charger.builder().id(1L).type("TypeA").power(10.0).status(Charger.Status.AVAILABLE).station(station1).build();
         Charger charger2 = Charger.builder().id(1L).type("TypeB").power(10.0).status(Charger.Status.AVAILABLE).station(station2).build();
 
-        assertFalse(charger1.equals(charger2));
+        assertNotEquals(charger1, charger2);
     }
 
     @Test
@@ -102,7 +102,7 @@ class ChargerTest {
         Charger charger1 = Charger.builder().id(1L).type("TypeA").power(10.0).status(Charger.Status.AVAILABLE).station(station1).build();
         Charger charger2 = Charger.builder().id(1L).type("TypeA").power(20.0).status(Charger.Status.AVAILABLE).station(station2).build();
 
-        assertFalse(charger1.equals(charger2));
+        assertNotEquals(charger1, charger2);
     }
 
     @Test
@@ -113,7 +113,7 @@ class ChargerTest {
         Charger charger1 = Charger.builder().id(1L).type("TypeA").power(10.0).status(Charger.Status.AVAILABLE).station(station1).build();
         Charger charger2 = Charger.builder().id(1L).type("TypeA").power(10.0).status(Charger.Status.BEING_USED).station(station2).build();
 
-        assertFalse(charger1.equals(charger2));
+        assertNotEquals(charger1, charger2);
     }
 
     @Test
@@ -124,19 +124,19 @@ class ChargerTest {
         Charger charger1 = Charger.builder().id(1L).type("TypeA").power(10.0).status(Charger.Status.AVAILABLE).station(station1).build();
         Charger charger2 = Charger.builder().id(1L).type("TypeA").power(10.0).status(Charger.Status.AVAILABLE).station(station2).build();
 
-        assertFalse(charger1.equals(charger2));
+        assertNotEquals(charger1, charger2);
     }
 
     @Test
     void testEquals_VsNull() {
         Charger charger = Charger.builder().build();
-        assertFalse(charger.equals(null));
+        assertNotEquals(null, charger);
     }
 
     @Test
     void testEquals_VsDifferentType() {
         Charger charger = Charger.builder().build();
-        assertFalse(charger.equals("a string"));
+        assertNotEquals("a string", charger);
     }
 
     @Test
@@ -148,22 +148,22 @@ class ChargerTest {
         Charger charger1 = Charger.builder().id(1L).type(null).power(10.0).status(Charger.Status.AVAILABLE).station(station1).build();
         Charger charger2 = Charger.builder().id(1L).type(null).power(10.0).status(Charger.Status.AVAILABLE).station(station2).build();
         Charger charger3 = Charger.builder().id(1L).type("TypeA").power(10.0).status(Charger.Status.AVAILABLE).station(station1).build();
-        assertTrue(charger1.equals(charger2));
-        assertFalse(charger1.equals(charger3));
+        assertEquals(charger1, charger2);
+        assertNotEquals(charger1, charger3);
 
         // Test with null status
         Charger charger4 = Charger.builder().id(1L).type("TypeA").power(10.0).status(null).station(station1).build();
         Charger charger5 = Charger.builder().id(1L).type("TypeA").power(10.0).status(null).station(station2).build();
          Charger charger6 = Charger.builder().id(1L).type("TypeA").power(10.0).status(Charger.Status.AVAILABLE).station(station1).build();
-        assertTrue(charger4.equals(charger5));
-        assertFalse(charger4.equals(charger6));
+        assertEquals(charger4, charger5);
+        assertNotEquals(charger4, charger6);
 
          // Test with null station
          Charger charger7 = Charger.builder().id(1L).type("TypeA").power(10.0).status(Charger.Status.AVAILABLE).station(null).build();
         Charger charger8 = Charger.builder().id(1L).type("TypeA").power(10.0).status(Charger.Status.AVAILABLE).station(null).build();
          Charger charger9 = Charger.builder().id(1L).type("TypeA").power(10.0).status(Charger.Status.AVAILABLE).station(station1).build();
-        assertTrue(charger7.equals(charger8));
-        assertFalse(charger7.equals(charger9));
+        assertEquals(charger7, charger8);
+        assertNotEquals(charger7, charger9);
     }
 
     @Test

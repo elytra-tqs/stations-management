@@ -109,8 +109,9 @@ class BookingRepositoryTest {
 
         // Test findByUserId
         List<Booking> userBookings = bookingRepository.findByUserId("user123");
-        assertThat(userBookings).hasSize(2);
-        assertThat(userBookings).allMatch(booking -> booking.getUserId().equals("user123"));
+        assertThat(userBookings)
+            .hasSize(2)
+            .allMatch(booking -> booking.getUserId().equals("user123"));
     }
 
     @Test
