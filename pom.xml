@@ -97,6 +97,7 @@
 		</dependency>
 	</dependencies>
 
+
 	<build>
 		<plugins>
 			<plugin>
@@ -130,8 +131,14 @@
 				<groupId>org.jacoco</groupId>
 				<artifactId>jacoco-maven-plugin</artifactId>
 				<version>0.8.11</version>
+				<configuration>
+					<excludes>
+						<exclude>**/StationsManagementApplication.class</exclude>
+					</excludes>
+				</configuration>
 				<executions>
 					<execution>
+						<id>prepare-agent</id>
 						<goals>
 							<goal>prepare-agent</goal>
 						</goals>
@@ -144,6 +151,11 @@
 						</goals>
 					</execution>
 				</executions>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-surefire-plugin</artifactId>
+				<version>3.1.2</version>
 			</plugin>
 		</plugins>
 	</build>
