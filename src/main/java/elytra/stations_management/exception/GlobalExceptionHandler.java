@@ -83,4 +83,18 @@ public class GlobalExceptionHandler {
         error.put(ERROR_KEY, "Invalid parameter type: " + e.getName() + " should be of type " + Objects.requireNonNull(e.getRequiredType()).getSimpleName());
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
     }
+
+    @ExceptionHandler(InvalidBookingException.class)
+    public ResponseEntity<Map<String, String>> handleInvalidBooking(InvalidBookingException e) {
+        Map<String, String> error = new HashMap<>();
+        error.put(ERROR_KEY, e.getMessage());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+    }
+
+    @ExceptionHandler(InvalidStatusTransitionException.class)
+    public ResponseEntity<Map<String, String>> handleInvalidStatusTransition(InvalidStatusTransitionException e) {
+        Map<String, String> error = new HashMap<>();
+        error.put(ERROR_KEY, e.getMessage());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+    }
 }
