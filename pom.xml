@@ -120,6 +120,7 @@
 			<artifactId>jjwt-jackson</artifactId>
 			<version>${jjwt.version}</version>
 		</dependency>
+		<dependency>
 			<groupId>app.getxray</groupId>
 			<artifactId>xray-junit-extensions</artifactId>
 			<version>0.8.0</version>
