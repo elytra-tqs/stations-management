@@ -28,8 +28,9 @@ public class WebConfig implements WebMvcConfigurer {
                 "http://127.0.0.1:5173"
             ) 
             .allowedMethods("GET", "POST", "PUT", "DELETE", "OPTIONS")
-            .allowedHeaders("*")
-            .allowCredentials(false) 
-            .maxAge(3600); 
+            .allowedHeaders("Authorization", "Content-Type", "Accept", "Origin", "X-Requested-With")
+            .exposedHeaders("Authorization") // In case we need to expose JWT in response headers
+            .allowCredentials(false) // False because we use JWT in Authorization header, not cookies
+            .maxAge(3600); // 1 hour cache for preflight requests
     }
 }
