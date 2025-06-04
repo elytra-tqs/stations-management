@@ -28,10 +28,6 @@ public class SecurityConfig {
         this.userDetailsService = userDetailsService;
     }
 
-    private static void configureFrameOptions(org.springframework.security.config.annotation.web.configurers.HeadersConfigurer<HttpSecurity> headers) {
-        headers.frameOptions(frameOptions -> frameOptions.sameOrigin());
-    }
-
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http, AuthenticationProvider authenticationProvider) throws Exception {
         http

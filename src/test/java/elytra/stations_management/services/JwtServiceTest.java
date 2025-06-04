@@ -94,7 +94,6 @@ class JwtServiceTest {
     @Test
     void tokenGeneration_ShouldBeConsistent() throws InterruptedException {
         String token1 = jwtService.generateToken("testuser");
-        Thread.sleep(1000); // Ensure different timestamps
         String token2 = jwtService.generateToken("testuser");
 
         // Tokens should be different (different timestamps)

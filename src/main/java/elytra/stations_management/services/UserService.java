@@ -1,5 +1,6 @@
 package elytra.stations_management.services;
 
+import elytra.stations_management.exception.UserException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -34,11 +35,11 @@ public class UserService implements UserDetailsService {
     public User registerUser(User user) {
         // Check if username already exists
         if (repository.existsByUsername(user.getUsername())) {
-            throw new RuntimeException("Username already exists: " + user.getUsername());
+            throw new UserException("Username already exists: " + user.getUsername());
         }
         // Check if email already exists
         if (repository.existsByEmail(user.getEmail())) {
-            throw new RuntimeException("Email already exists: " + user.getEmail());
+            throw new UserException("Email already exists: " + user.getEmail());
         }
         user.setPassword(encoder.encode(user.getPassword()));
         return repository.save(user);

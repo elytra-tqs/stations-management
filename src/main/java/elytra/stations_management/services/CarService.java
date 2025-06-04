@@ -1,5 +1,6 @@
 package elytra.stations_management.services;
 
+import elytra.stations_management.exception.LicensePlateAlreadyRegisteredException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import elytra.stations_management.models.Car;
@@ -22,7 +23,7 @@ public class CarService {
                 .orElseThrow(() -> new RuntimeException("Driver not found"));
 
         if (carRepository.existsByLicensePlate(car.getLicensePlate())) {
-            throw new RuntimeException("License plate already registered");
+            throw new LicensePlateAlreadyRegisteredException("License plate already registered");
         }
 
         car.setEvDriver(driver);
@@ -47,7 +48,7 @@ public class CarService {
         // Check if license plate is being changed and if it's already taken
         if (!existingCar.getLicensePlate().equals(updatedCar.getLicensePlate()) &&
                 carRepository.existsByLicensePlate(updatedCar.getLicensePlate())) {
-            throw new RuntimeException("License plate already registered");
+            throw new LicensePlateAlreadyRegisteredException("License plate already registered");
         }
 
         existingCar.setModel(updatedCar.getModel());

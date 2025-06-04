@@ -11,6 +11,8 @@ import org.springframework.dao.DataIntegrityViolationException;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
+
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
@@ -78,7 +80,7 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(MethodArgumentTypeMismatchException.class)
     public ResponseEntity<Map<String, String>> handleTypeMismatch(MethodArgumentTypeMismatchException e) {
         Map<String, String> error = new HashMap<>();
-        error.put(ERROR_KEY, "Invalid parameter type: " + e.getName() + " should be of type " + e.getRequiredType().getSimpleName());
+        error.put(ERROR_KEY, "Invalid parameter type: " + e.getName() + " should be of type " + Objects.requireNonNull(e.getRequiredType()).getSimpleName());
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
     }
 }
