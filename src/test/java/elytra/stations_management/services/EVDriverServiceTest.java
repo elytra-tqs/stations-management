@@ -173,8 +173,7 @@ class EVDriverServiceTest {
         List<EVDriver> result = evDriverService.getAllDrivers();
 
         // Assert
-        assertThat(result).hasSize(2);
-        assertThat(result).containsExactly(testDriver, driver2);
+        assertThat(result).hasSize(2).containsExactly(testDriver, driver2);
         verify(evDriverRepository).findAll();
     }
 

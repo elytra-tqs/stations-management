@@ -8,11 +8,9 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-
-import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -39,14 +37,17 @@ public class UserController {
 
     @PostMapping("/generateToken")
     public String authenticateAndGetToken(@RequestBody AuthRequest authRequest) {
-        Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(authRequest.getUsername(), authRequest.getPassword())
-        );
-        if (authentication.isAuthenticated()) {
-            return jwtService.generateToken(authRequest.getUsername());
-        } else {
-            throw new UsernameNotFoundException("Invalid user request!");
+        try {
+            Authentication authentication = authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(authRequest.getUsername(), authRequest.getPassword())
+            );
+            if (authentication.isAuthenticated()) {
+                return jwtService.generateToken(authRequest.getUsername());
+            }
+        } catch (Exception e) {
+            throw new BadCredentialsException("Invalid credentials");
         }
+        throw new BadCredentialsException("Invalid credentials");
     }
 
     @GetMapping("/users")
@@ -56,14 +57,19 @@ public class UserController {
 
     @PostMapping("/login")
     public Map<String, String> login(@RequestBody AuthRequest authRequest) {
-        Authentication authentication = authenticationManager.authenticate(
-                new UsernamePasswordAuthenticationToken(authRequest.getUsername(), authRequest.getPassword())
-        );
-        if (authentication.isAuthenticated()) {
-            String token = jwtService.generateToken(authRequest.getUsername());
-            return Map.of("token", token, "username", authRequest.getUsername());
-        } else {
-            throw new UsernameNotFoundException("Invalid credentials!");
+        try {
+            Authentication authentication = authenticationManager.authenticate(
+                    new UsernamePasswordAuthenticationToken(authRequest.getUsername(), authRequest.getPassword())
+            );
+            if (authentication.isAuthenticated()) {
+                String token = jwtService.generateToken(authRequest.getUsername());
+                return Map.of("token", token, "username", authRequest.getUsername());
+            }
+        } catch (Exception e) {
+            // Don't reveal if username exists or not - always return generic message
+            throw new BadCredentialsException("Invalid credentials");
         }
+        // This line should never be reached, but just in case
+        throw new BadCredentialsException("Invalid credentials");
     }
 }

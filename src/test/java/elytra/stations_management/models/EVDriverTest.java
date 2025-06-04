@@ -117,9 +117,7 @@ class EVDriverTest {
     @Test
     void testToString() {
         String driverString = driver.toString();
-        assertThat(driverString).contains("EVDriver");
-        assertThat(driverString).contains("id=1");
-        assertThat(driverString).contains("user=");
+        assertThat(driverString).contains("EVDriver", "id=1", "user=");
     }
 
     @Test
@@ -142,10 +140,11 @@ class EVDriverTest {
                 .cars(new ArrayList<>())
                 .build();
 
-        assertThat(driver1).isEqualTo(driver2);
-        assertThat(driver1).isNotEqualTo(driver3);
-        assertThat(driver1).isNotEqualTo(null);
-        assertThat(driver1).isNotEqualTo("not a driver");
+        assertThat(driver1)
+                .isEqualTo(driver2)
+                .isNotEqualTo(driver3)
+                .isNotEqualTo(null)
+                .isNotEqualTo("not a driver");
     }
 
     @Test
@@ -162,7 +161,7 @@ class EVDriverTest {
                 .cars(new ArrayList<>())
                 .build();
 
-        assertThat(driver1.hashCode()).isEqualTo(driver2.hashCode());
+        assertThat(driver1).hasSameHashCodeAs(driver2);
     }
 
     @Test

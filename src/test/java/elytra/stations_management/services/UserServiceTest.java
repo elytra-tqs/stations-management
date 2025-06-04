@@ -222,8 +222,9 @@ class UserServiceTest {
 
         List<User> result = userService.getAllUsers();
 
-        assertThat(result).hasSize(2);
-        assertThat(result).containsExactlyElementsOf(users);
+        assertThat(result)
+                .hasSize(2)
+                .containsExactlyElementsOf(users);
         verify(userRepository).findAll();
     }
 

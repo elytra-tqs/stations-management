@@ -128,8 +128,9 @@ class CarServiceTest {
 
         List<Car> result = carService.getCarsByDriver(1L);
 
-        assertThat(result).hasSize(2);
-        assertThat(result).containsExactlyElementsOf(cars);
+        assertThat(result)
+                .hasSize(2)
+                .containsExactlyElementsOf(cars);
         verify(carRepository).findByEvDriverId(1L);
     }
 
@@ -159,8 +160,7 @@ class CarServiceTest {
 
         List<Car> result = carService.getCarsByChargerType("Type 2");
 
-        assertThat(result).hasSize(2);
-        assertThat(result).containsExactlyElementsOf(cars);
+        assertThat(result).hasSize(2).containsExactlyElementsOf(cars);
         verify(carRepository).findByChargerType("Type 2");
     }
 

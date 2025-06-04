@@ -1,17 +1,13 @@
 package elytra.stations_management.services;
 
-import io.jsonwebtoken.Claims;
-import io.jsonwebtoken.ExpiredJwtException;
-import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.security.Keys;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.test.util.ReflectionTestUtils;
 
-import javax.crypto.SecretKey;
 import java.util.ArrayList;
 import java.util.Date;
 
@@ -28,6 +24,8 @@ class JwtServiceTest {
     @BeforeEach
     void setUp() {
         jwtService = new JwtService();
+        // Set the SECRET field using reflection since @Value won't work without Spring context
+        ReflectionTestUtils.setField(jwtService, "SECRET", SECRET);
         userDetails = User.builder()
                 .username("testuser")
                 .password("password")
@@ -39,9 +37,10 @@ class JwtServiceTest {
     void generateToken_ShouldCreateValidToken() {
         String token = jwtService.generateToken("testuser");
 
-        assertThat(token).isNotNull();
-        assertThat(token).isNotBlank();
-        assertThat(token.split("\\.")).hasSize(3); // JWT has 3 parts
+        assertThat(token)
+                .isNotNull()
+                .isNotBlank()
+                .matches(t -> t.split("\\.").length == 3, "JWT has 3 parts"); // JWT has 3 parts
     }
 
     @Test

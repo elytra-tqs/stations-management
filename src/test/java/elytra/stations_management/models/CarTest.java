@@ -112,12 +112,14 @@ class CarTest {
     @Test
     void testToString() {
         String carString = car.toString();
-        assertThat(carString).contains("Car");
-        assertThat(carString).contains("id=1");
-        assertThat(carString).contains("model=Tesla Model 3");
-        assertThat(carString).contains("licensePlate=ABC-1234");
-        assertThat(carString).contains("batteryCapacity=75.0");
-        assertThat(carString).contains("chargerType=Type 2");
+        assertThat(carString).contains(
+                "Car",
+                "id=1",
+                "model=Tesla Model 3",
+                "licensePlate=ABC-1234",
+                "batteryCapacity=75.0",
+                "chargerType=Type 2"
+        );
     }
 
     @Test
@@ -149,10 +151,11 @@ class CarTest {
                 .evDriver(driver)
                 .build();
 
-        assertThat(car1).isEqualTo(car2);
-        assertThat(car1).isNotEqualTo(car3);
-        assertThat(car1).isNotEqualTo(null);
-        assertThat(car1).isNotEqualTo("not a car");
+        assertThat(car1)
+                .isEqualTo(car2)
+                .isNotEqualTo(car3)
+                .isNotEqualTo(null)
+                .isNotEqualTo("not a car");
     }
 
     @Test
@@ -175,7 +178,7 @@ class CarTest {
                 .evDriver(driver)
                 .build();
 
-        assertThat(car1.hashCode()).isEqualTo(car2.hashCode());
+        assertThat(car1).hasSameHashCodeAs(car2);
     }
 
     @Test

@@ -56,7 +56,7 @@ class AuthenticationIntegrationTest {
                 .userType(User.UserType.EV_DRIVER)
                 .build();
 
-        MvcResult registerResult = mockMvc.perform(post("/api/v1/auth/addNewUser")
+        mockMvc.perform(post("/api/v1/auth/addNewUser")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(newUser)))
                 .andExpect(status().isOk())

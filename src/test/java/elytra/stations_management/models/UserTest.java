@@ -130,13 +130,15 @@ class UserTest {
     @Test
     void testToString() {
         String userString = user.toString();
-        assertThat(userString).contains("User");
-        assertThat(userString).contains("id=1");
-        assertThat(userString).contains("username=testuser");
-        assertThat(userString).contains("email=test@example.com");
-        assertThat(userString).contains("firstName=John");
-        assertThat(userString).contains("lastName=Doe");
-        assertThat(userString).contains("userType=EV_DRIVER");
+        assertThat(userString).contains(
+                "User",
+                "id=1",
+                "username=testuser",
+                "email=test@example.com",
+                "firstName=John",
+                "lastName=Doe",
+                "userType=EV_DRIVER"
+        );
     }
 
     @Test
@@ -171,10 +173,11 @@ class UserTest {
                 .userType(User.UserType.ADMIN)
                 .build();
 
-        assertThat(user1).isEqualTo(user2);
-        assertThat(user1).isNotEqualTo(user3);
-        assertThat(user1).isNotEqualTo(null);
-        assertThat(user1).isNotEqualTo("not a user");
+        assertThat(user1)
+                .isEqualTo(user2)
+                .isNotEqualTo(user3)
+                .isNotEqualTo(null)
+                .isNotEqualTo("not a user");
     }
 
     @Test
@@ -199,7 +202,7 @@ class UserTest {
                 .userType(User.UserType.EV_DRIVER)
                 .build();
 
-        assertThat(user1.hashCode()).isEqualTo(user2.hashCode());
+        assertThat(user1).hasSameHashCodeAs(user2);
     }
 
     @Test
