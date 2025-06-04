@@ -17,66 +17,68 @@ import org.springframework.web.method.annotation.MethodArgumentTypeMismatchExcep
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
+    private static final String ERROR_KEY = "error";
+
     @ExceptionHandler(RuntimeException.class)
     public ResponseEntity<Map<String, String>> handleRuntimeException(RuntimeException e) {
         Map<String, String> error = new HashMap<>();
-        error.put("error", e.getMessage());
-        
+        error.put(ERROR_KEY, e.getMessage());
+
         if (e.getMessage() != null && (e.getMessage().contains("already exists"))) {
             return ResponseEntity.status(HttpStatus.CONFLICT).body(error);
         }
-        
+
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
     }
 
     @ExceptionHandler(DataIntegrityViolationException.class)
     public ResponseEntity<Map<String, String>> handleDataIntegrityViolation(DataIntegrityViolationException e) {
         Map<String, String> error = new HashMap<>();
-        
+
         if (e.getMessage() != null && e.getMessage().contains("USERNAME")) {
-            error.put("error", "Username already exists");
+            error.put(ERROR_KEY, "Username already exists");
             return ResponseEntity.status(HttpStatus.CONFLICT).body(error);
         } else if (e.getMessage() != null && e.getMessage().contains("EMAIL")) {
-            error.put("error", "Email already exists");
+            error.put(ERROR_KEY, "Email already exists");
             return ResponseEntity.status(HttpStatus.CONFLICT).body(error);
         }
-        
-        error.put("error", "Data integrity violation");
+
+        error.put(ERROR_KEY, "Data integrity violation");
         return ResponseEntity.status(HttpStatus.CONFLICT).body(error);
     }
 
     @ExceptionHandler(UsernameNotFoundException.class)
     public ResponseEntity<Map<String, String>> handleUsernameNotFound(UsernameNotFoundException e) {
         Map<String, String> error = new HashMap<>();
-        error.put("error", e.getMessage());
+        error.put(ERROR_KEY, e.getMessage());
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(error);
     }
 
     @ExceptionHandler(BadCredentialsException.class)
     public ResponseEntity<Map<String, String>> handleBadCredentials(BadCredentialsException e) {
         Map<String, String> error = new HashMap<>();
-        error.put("error", "Invalid username or password");
+        error.put(ERROR_KEY, "Invalid username or password");
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(error);
     }
 
     @ExceptionHandler(AuthenticationException.class)
     public ResponseEntity<Map<String, String>> handleAuthenticationException(AuthenticationException e) {
         Map<String, String> error = new HashMap<>();
-        error.put("error", "Authentication failed");
+        error.put(ERROR_KEY, "Authentication failed");
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(error);
     }
 
     @ExceptionHandler(HttpMessageNotReadableException.class)
     public ResponseEntity<Map<String, String>> handleHttpMessageNotReadable(HttpMessageNotReadableException e) {
         Map<String, String> error = new HashMap<>();
-        error.put("error", "Invalid request body: " + e.getMostSpecificCause().getMessage());
+        error.put(ERROR_KEY, "Invalid request body: " + e.getMostSpecificCause().getMessage());
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
     }
 
     @ExceptionHandler(MethodArgumentTypeMismatchException.class)
     public ResponseEntity<Map<String, String>> handleTypeMismatch(MethodArgumentTypeMismatchException e) {
         Map<String, String> error = new HashMap<>();
-        error.put("error", "Invalid parameter type: " + e.getName() + " should be of type " + e.getRequiredType().getSimpleName());
+        error.put(ERROR_KEY, "Invalid parameter type: " + e.getName() + " should be of type " + e.getRequiredType().getSimpleName());
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
     }
 }

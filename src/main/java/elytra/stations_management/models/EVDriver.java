@@ -24,7 +24,4 @@ public class EVDriver {
     @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
-    @JsonManagedReference
-    @OneToMany(mappedBy = "evDriver", cascade = CascadeType.ALL, orphanRemoval = true)
-    private List<Car> cars = new ArrayList<>();
 }

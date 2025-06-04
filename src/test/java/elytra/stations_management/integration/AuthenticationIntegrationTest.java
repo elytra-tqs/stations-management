@@ -195,9 +195,4 @@ class AuthenticationIntegrationTest {
         mockMvc.perform(get("/api/v1/stations"))
                 .andExpect(status().isForbidden());
     }
-
-    @Test
-    void protectedEndpoint_ShouldReturn403_WithInvalidToken() throws Exception {
-        // Skip this test as JWT validation behavior varies in test environment
-    }
 }

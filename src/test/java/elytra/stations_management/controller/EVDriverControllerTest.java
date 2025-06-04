@@ -56,7 +56,6 @@ class EVDriverControllerTest {
         testDriver = EVDriver.builder()
                 .id(1L)
                 .user(testUser)
-                .cars(Arrays.asList())
                 .build();
     }
 
@@ -133,7 +132,6 @@ class EVDriverControllerTest {
         EVDriver driver2 = EVDriver.builder()
                 .id(2L)
                 .user(user2)
-                .cars(Arrays.asList())
                 .build();
 
         List<EVDriver> drivers = Arrays.asList(testDriver, driver2);
@@ -169,7 +167,6 @@ class EVDriverControllerTest {
         EVDriver updatedDriver = EVDriver.builder()
                 .id(1L)
                 .user(testUser)
-                .cars(Arrays.asList())
                 .build();
 
         when(evDriverService.updateDriver(eq(1L), any(EVDriver.class))).thenReturn(updatedDriver);

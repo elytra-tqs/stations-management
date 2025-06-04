@@ -48,7 +48,6 @@ class EVDriverServiceTest {
         testDriver = EVDriver.builder()
                 .id(1L)
                 .user(testUser)
-                .cars(Arrays.asList())
                 .build();
     }
 
@@ -79,7 +78,6 @@ class EVDriverServiceTest {
         EVDriver expectedDriver = EVDriver.builder()
                 .id(2L)
                 .user(savedUser)
-                .cars(Arrays.asList())
                 .build();
 
         when(userService.registerUser(any(User.class))).thenReturn(savedUser);
@@ -163,7 +161,6 @@ class EVDriverServiceTest {
         EVDriver driver2 = EVDriver.builder()
                 .id(2L)
                 .user(user2)
-                .cars(Arrays.asList())
                 .build();
 
         List<EVDriver> drivers = Arrays.asList(testDriver, driver2);
@@ -216,7 +213,6 @@ class EVDriverServiceTest {
         EVDriver expectedDriver = EVDriver.builder()
                 .id(1L)
                 .user(updatedUser)
-                .cars(Arrays.asList())
                 .build();
 
         when(evDriverRepository.findById(1L)).thenReturn(Optional.of(testDriver));

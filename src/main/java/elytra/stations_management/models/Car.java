@@ -25,13 +25,13 @@ public class Car {
     private String licensePlate;
 
     @Column(nullable = false)
-    private Double batteryCapacity; 
+    private Double batteryCapacity;
 
     @Column(nullable = false)
-    private String chargerType; 
+    private String chargerType;
 
-    @JsonBackReference
     @ManyToOne
     @JoinColumn(name = "driver_id", nullable = false)
+    @JsonBackReference
     private EVDriver evDriver;
 }
