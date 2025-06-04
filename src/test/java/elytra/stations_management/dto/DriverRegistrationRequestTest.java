@@ -6,6 +6,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThatCode;
 
 class DriverRegistrationRequestTest {
 
@@ -74,20 +75,12 @@ class DriverRegistrationRequestTest {
         request3.setUser(testUser);
 
         // Test reflexivity
-        assertThat(request1).isEqualTo(request1);
-
-        // Test symmetry
-        assertThat(request1).isEqualTo(request2);
-        assertThat(request2).isEqualTo(request1);
-
-        // Test with different values
-        assertThat(request1).isNotEqualTo(request3);
-        
-        // Test null
-        assertThat(request1).isNotEqualTo(null);
-        
-        // Test different type
-        assertThat(request1).isNotEqualTo("not a request");
+        assertThat(request1)
+                .isEqualTo(request1)
+                .isEqualTo(request2)
+                .isNotEqualTo(request3)
+                .isNotEqualTo(null)
+                .isNotEqualTo("not a request");
     }
 
     @Test
@@ -108,9 +101,11 @@ class DriverRegistrationRequestTest {
         request4.setDriver(null);
         request4.setUser(testUser);
 
-        assertThat(request1).isEqualTo(request2);
-        assertThat(request1).isNotEqualTo(request3);
-        assertThat(request1).isNotEqualTo(request4);
+        assertThat(request1)
+                .isEqualTo(request2)
+                .isNotEqualTo(request3)
+                .isNotEqualTo(request4);
+
         assertThat(request3).isNotEqualTo(request4);
     }
 
@@ -153,8 +148,8 @@ class DriverRegistrationRequestTest {
         assertThat(request1).hasSameHashCodeAs(request2);
         
         // Test that null fields don't cause NullPointerException
-        assertThat(request1.hashCode()).isNotNull();
-        assertThat(request3.hashCode()).isNotNull();
+        assertThatCode(request1::hashCode).doesNotThrowAnyException();
+        assertThatCode(request3::hashCode).doesNotThrowAnyException();
     }
 
     @Test
@@ -184,9 +179,10 @@ class DriverRegistrationRequestTest {
         request.setUser(testUser);
 
         String toString = request.toString();
-        assertThat(toString).contains("DriverRegistrationRequest");
-        assertThat(toString).contains("driver=");
-        assertThat(toString).contains("user=");
+        assertThat(toString)
+                .contains("DriverRegistrationRequest")
+                .contains("driver=")
+                .contains("user=");
     }
 
     @Test

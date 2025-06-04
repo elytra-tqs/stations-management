@@ -18,7 +18,7 @@ import java.util.function.Function;
 @Component
 public class JwtService {
     @Value("${jwt.secret}")
-    private String SECRET;
+    private String secret;
 
     public String generateToken(String username) { // Use email as username
         Map<String, Object> claims = new HashMap<>();
@@ -36,7 +36,7 @@ public class JwtService {
     }
 
     private Key getSignKey() {
-        byte[] keyBytes = Decoders.BASE64.decode(SECRET);
+        byte[] keyBytes = Decoders.BASE64.decode(secret);
         return Keys.hmacShaKeyFor(keyBytes);
     }
 

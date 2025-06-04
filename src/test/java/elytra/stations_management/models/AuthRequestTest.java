@@ -3,6 +3,7 @@ package elytra.stations_management.models;
 import org.junit.jupiter.api.Test;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThatCode;
 
 class AuthRequestTest {
 
@@ -51,23 +52,13 @@ class AuthRequestTest {
         AuthRequest authRequest4 = new AuthRequest("user1", "pass2");
 
         // Test reflexivity
-        assertThat(authRequest1).isEqualTo(authRequest1);
-
-        // Test symmetry
-        assertThat(authRequest1).isEqualTo(authRequest2);
-        assertThat(authRequest2).isEqualTo(authRequest1);
-
-        // Test different username
-        assertThat(authRequest1).isNotEqualTo(authRequest3);
-
-        // Test different password
-        assertThat(authRequest1).isNotEqualTo(authRequest4);
-
-        // Test null
-        assertThat(authRequest1).isNotEqualTo(null);
-
-        // Test different type
-        assertThat(authRequest1).isNotEqualTo("not an AuthRequest");
+        assertThat(authRequest1)
+                .isEqualTo(authRequest1)
+                .isEqualTo(authRequest2)
+                .isNotEqualTo(authRequest3)
+                .isNotEqualTo(authRequest4)
+                .isNotEqualTo(null)
+                .isNotEqualTo("not an AuthRequest");
     }
 
     @Test
@@ -106,10 +97,10 @@ class AuthRequestTest {
         AuthRequest authRequest4 = new AuthRequest(null, null);
 
         assertThat(authRequest1).hasSameHashCodeAs(authRequest2);
-        
+
         // Test that null fields don't cause NullPointerException
-        assertThat(authRequest3.hashCode()).isNotNull();
-        assertThat(authRequest4.hashCode()).isNotNull();
+        assertThatCode(authRequest3::hashCode).doesNotThrowAnyException();
+        assertThatCode(authRequest4::hashCode).doesNotThrowAnyException();
     }
 
     @Test
@@ -117,9 +108,10 @@ class AuthRequestTest {
         AuthRequest authRequest = new AuthRequest("testuser", "testpassword");
         String toString = authRequest.toString();
 
-        assertThat(toString).contains("AuthRequest");
-        assertThat(toString).contains("username=testuser");
-        assertThat(toString).contains("password=testpassword");
+        assertThat(toString)
+                .contains("AuthRequest")
+                .contains("username=testuser")
+                .contains("password=testpassword");
     }
 
     @Test
@@ -127,9 +119,10 @@ class AuthRequestTest {
         AuthRequest authRequest = new AuthRequest(null, null);
         String toString = authRequest.toString();
 
-        assertThat(toString).contains("AuthRequest");
-        assertThat(toString).contains("username=null");
-        assertThat(toString).contains("password=null");
+        assertThat(toString)
+                .contains("AuthRequest")
+                .contains("username=null")
+                .contains("password=null");
     }
 
     @Test

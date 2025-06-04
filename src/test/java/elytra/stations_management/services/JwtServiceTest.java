@@ -25,7 +25,7 @@ class JwtServiceTest {
     void setUp() {
         jwtService = new JwtService();
         // Set the SECRET field using reflection since @Value won't work without Spring context
-        ReflectionTestUtils.setField(jwtService, "SECRET", SECRET);
+        ReflectionTestUtils.setField(jwtService, "secret", SECRET);
         userDetails = User.builder()
                 .username("testuser")
                 .password("password")
