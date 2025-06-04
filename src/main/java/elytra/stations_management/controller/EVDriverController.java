@@ -2,6 +2,7 @@ package elytra.stations_management.controller;
 
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import elytra.stations_management.dto.DriverRegistrationRequest;
 import elytra.stations_management.models.EVDriver;
 import elytra.stations_management.services.EVDriverService;
 import lombok.RequiredArgsConstructor;
@@ -15,9 +16,9 @@ public class EVDriverController {
     private final EVDriverService evDriverService;
 
     @PostMapping
-    public ResponseEntity<EVDriver> registerDriver(@RequestBody EVDriver driver) {
+    public ResponseEntity<EVDriver> registerDriver(@RequestBody DriverRegistrationRequest request) {
         try {
-            return ResponseEntity.ok(evDriverService.registerDriver(driver));
+            return ResponseEntity.ok(evDriverService.registerDriver(request.getDriver(), request.getUser()));
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().build();
         }
@@ -27,15 +28,6 @@ public class EVDriverController {
     public ResponseEntity<EVDriver> getDriverById(@PathVariable Long id) {
         try {
             return ResponseEntity.ok(evDriverService.getDriverById(id));
-        } catch (RuntimeException e) {
-            return ResponseEntity.notFound().build();
-        }
-    }
-
-    @GetMapping("/username/{username}")
-    public ResponseEntity<EVDriver> getDriverByUsername(@PathVariable String username) {
-        try {
-            return ResponseEntity.ok(evDriverService.getDriverByUsername(username));
         } catch (RuntimeException e) {
             return ResponseEntity.notFound().build();
         }

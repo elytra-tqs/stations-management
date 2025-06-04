@@ -23,6 +23,8 @@ public class User {
     @Column(nullable = false)
     private String password;
 
+    @Column(nullable = false, unique = true)
+    private String email;
 
     @Column(nullable = false)
     private String firstName;
@@ -30,10 +32,13 @@ public class User {
     @Column(nullable = false)
     private String lastName;
 
-
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private UserType userType;
+
+    public String getRoles() {
+        return userType != null ? "ROLE_" + userType.name() : "ROLE_USER";
+    }
 
     public enum UserType {
         EV_DRIVER,

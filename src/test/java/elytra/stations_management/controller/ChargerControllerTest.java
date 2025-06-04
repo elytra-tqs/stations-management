@@ -6,10 +6,13 @@ import elytra.stations_management.services.ChargerService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
+import elytra.stations_management.config.TestSecurityConfig;
 
 import java.util.Arrays;
 import java.util.List;
@@ -21,7 +24,9 @@ import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
-@WebMvcTest(ChargerController.class)
+@SpringBootTest
+@AutoConfigureMockMvc
+@Import(TestSecurityConfig.class)
 class ChargerControllerTest {
 
     @Autowired

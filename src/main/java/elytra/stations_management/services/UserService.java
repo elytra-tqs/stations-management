@@ -1,68 +1,67 @@
 package elytra.stations_management.services;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import elytra.stations_management.models.User;
 import elytra.stations_management.repositories.UserRepository;
 import lombok.RequiredArgsConstructor;
 
+import java.util.Optional;
+import java.util.List;
+
 @Service
-@RequiredArgsConstructor
-public class UserService {
-    private final UserRepository userRepository;
+public class UserService implements UserDetailsService {
+    private final UserRepository repository;
+    private final PasswordEncoder encoder;
 
-    @Transactional
+    public UserService(UserRepository repository, PasswordEncoder encoder) {
+        this.repository = repository;
+        this.encoder = encoder;
+    }
+
+    @Override
+    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
+        Optional<User> userDetail = repository.findByUsername(username);
+        return userDetail.map(UserInfoDetails::new)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found: " + username));
+    }
+
     public User registerUser(User user) {
-        if (userRepository.existsByUsername(user.getUsername())) {
-            throw new RuntimeException("Username already exists");
+        // Check if username already exists
+        if (repository.existsByUsername(user.getUsername())) {
+            throw new RuntimeException("Username already exists: " + user.getUsername());
         }
-        if (userRepository.existsByEmail(user.getEmail())) {
-            throw new RuntimeException("Email already exists");
+        // Check if email already exists
+        if (repository.existsByEmail(user.getEmail())) {
+            throw new RuntimeException("Email already exists: " + user.getEmail());
         }
-        return userRepository.save(user);
+        user.setPassword(encoder.encode(user.getPassword()));
+        return repository.save(user);
     }
 
-    @Transactional(readOnly = true)
-    public User getUserById(Long id) {
-        return userRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("User not found"));
-    }
-
-    @Transactional(readOnly = true)
-    public User getUserByUsername(String username) {
-        return userRepository.findByUsername(username)
-                .orElseThrow(() -> new RuntimeException("User not found"));
-    }
-
-    @Transactional(readOnly = true)
-    public User getUserByEmail(String email) {
-        return userRepository.findByEmail(email)
-                .orElseThrow(() -> new RuntimeException("User not found"));
-    }
-
-    @Transactional
-    public User updateUser(Long id, User updatedUser) {
-        User existingUser = getUserById(id);
-
-        // Check if username is being changed and if it's already taken
-        if (!existingUser.getUsername().equals(updatedUser.getUsername()) &&
-                userRepository.existsByUsername(updatedUser.getUsername())) {
-            throw new RuntimeException("Username already exists");
+    public User updateUser(Long id, User user) {
+        User existingUser = repository.findById(id)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found with id: " + id));
+        
+        if (user.getPassword() != null && !user.getPassword().isEmpty()) {
+            existingUser.setPassword(encoder.encode(user.getPassword()));
         }
-
-        // Check if email is being changed and if it's already taken
-        if (!existingUser.getEmail().equals(updatedUser.getEmail()) &&
-                userRepository.existsByEmail(updatedUser.getEmail())) {
-            throw new RuntimeException("Email already exists");
+        if (user.getEmail() != null) {
+            existingUser.setEmail(user.getEmail());
         }
+        if (user.getUserType() != null) {
+            existingUser.setUserType(user.getUserType());
+        }
+        
+        return repository.save(existingUser);
+    }
 
-        existingUser.setUsername(updatedUser.getUsername());
-        existingUser.setEmail(updatedUser.getEmail());
-        existingUser.setPassword(updatedUser.getPassword());
-        existingUser.setFirstName(updatedUser.getFirstName());
-        existingUser.setLastName(updatedUser.getLastName());
-        existingUser.setPhoneNumber(updatedUser.getPhoneNumber());
-
-        return userRepository.save(existingUser);
+    public List<User> getAllUsers() {
+        return repository.findAll();
     }
 } 
