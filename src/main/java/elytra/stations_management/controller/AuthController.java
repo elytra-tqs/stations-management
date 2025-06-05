@@ -31,6 +31,8 @@ public class AuthController {
     private final JwtService jwtService;
     private final AuthenticationManager authenticationManager;
 
+    // Inside AuthController.java
+
     @PostMapping("/login")
     @Operation(summary = "Login user")
     public ResponseEntity<Map<String, Object>> login(@RequestBody AuthRequest authRequest) {
@@ -41,51 +43,63 @@ public class AuthController {
             if (authentication.isAuthenticated()) {
                 String token = jwtService.generateToken(authRequest.getUsername());
                 User user = userService.getUserByUsername(authRequest.getUsername());
-                
+
                 Map<String, Object> response = new HashMap<>();
                 response.put("token", token);
                 response.put("username", user.getUsername());
                 response.put("userType", user.getUserType());
                 response.put("userId", user.getId());
-                
+
                 // Add role-specific information
                 switch (user.getUserType()) {
                     case EV_DRIVER:
-                        try {
-                            EVDriver driver = evDriverService.getDriverByUserId(user.getId());
-                            response.put("driverId", driver.getId());
-                        } catch (Exception e) {
-                            // Driver might not be fully set up yet
-                        }
+                        addDriverInfo(user, response);
                         break;
                     case STATION_OPERATOR:
-                        try {
-                            StationOperator operator = stationOperatorService.getStationOperatorByUserId(user.getId());
-                            response.put("operatorId", operator.getId());
-                            if (operator.getStation() != null) {
-                                response.put("stationId", operator.getStation().getId());
-                                response.put("stationName", operator.getStation().getName());
-                            }
-                        } catch (Exception e) {
-                            // Operator might not be fully set up yet
-                        }
+                        addOperatorInfo(user, response);
                         break;
                     case ADMIN:
-                        try {
-                            Admin admin = adminService.getAdminByUserId(user.getId());
-                            response.put("adminId", admin.getId());
-                        } catch (Exception e) {
-                            // Admin might not be fully set up yet
-                        }
+                        addAdminInfo(user, response);
                         break;
                 }
-                
+
                 return ResponseEntity.ok(response);
             }
         } catch (Exception e) {
             throw new BadCredentialsException("Invalid credentials");
         }
         throw new BadCredentialsException("Invalid credentials");
+    }
+
+    private void addDriverInfo(User user, Map<String, Object> response) {
+        try {
+            EVDriver driver = evDriverService.getDriverByUserId(user.getId());
+            response.put("driverId", driver.getId());
+        } catch (Exception e) {
+            // Driver might not be fully set up yet
+        }
+    }
+
+    private void addOperatorInfo(User user, Map<String, Object> response) {
+        try {
+            StationOperator operator = stationOperatorService.getStationOperatorByUserId(user.getId());
+            response.put("operatorId", operator.getId());
+            if (operator.getStation() != null) {
+                response.put("stationId", operator.getStation().getId());
+                response.put("stationName", operator.getStation().getName());
+            }
+        } catch (Exception e) {
+            // Operator might not be fully set up yet
+        }
+    }
+
+    private void addAdminInfo(User user, Map<String, Object> response) {
+        try {
+            Admin admin = adminService.getAdminByUserId(user.getId());
+            response.put("adminId", admin.getId());
+        } catch (Exception e) {
+            // Admin might not be fully set up yet
+        }
     }
 
     @PostMapping("/register/driver")
