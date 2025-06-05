@@ -1,6 +1,7 @@
 package elytra.stations_management.integration;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import elytra.stations_management.config.TestContainerConfig;
 import elytra.stations_management.models.AuthRequest;
 import elytra.stations_management.models.User;
 import elytra.stations_management.repositories.UserRepository;
@@ -9,12 +10,14 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.transaction.annotation.Transactional;
+import org.testcontainers.junit.jupiter.Testcontainers;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -25,6 +28,8 @@ import static org.hamcrest.Matchers.*;
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
 @Transactional
+@Testcontainers
+@Import(TestContainerConfig.class)
 class AuthenticationIntegrationTest {
 
     @Autowired
