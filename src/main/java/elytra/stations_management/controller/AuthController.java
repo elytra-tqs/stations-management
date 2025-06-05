@@ -132,16 +132,23 @@ public class AuthController {
     }
 
     @PostMapping("/register/operator")
-    @Operation(summary = "Register a new station operator (Admin only)")
+    @Operation(summary = "Register a new station operator (Public)")
     public ResponseEntity<Map<String, Object>> registerOperator(@RequestBody OperatorRegistrationRequest request) {
         try {
+            // Set user type
+            request.getUser().setUserType(User.UserType.STATION_OPERATOR);
+            
             StationOperator operator = stationOperatorService.registerStationOperator(
                     request.getOperator(),
                     request.getUser(),
                     request.getStationId()
             );
 
+            // Generate token for auto-login
+            String token = jwtService.generateToken(request.getUser().getUsername());
+
             Map<String, Object> response = new HashMap<>();
+            response.put("token", token);
             response.put("message", "Station operator registered successfully");
             response.put(USERNAME, operator.getUser().getUsername());
             response.put(USER_TYPE, User.UserType.STATION_OPERATOR);
