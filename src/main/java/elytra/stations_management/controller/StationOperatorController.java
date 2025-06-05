@@ -151,4 +151,20 @@ public class StationOperatorController {
     public ResponseEntity<List<Station>> getAvailableStations() {
         return ResponseEntity.ok(stationOperatorService.getAvailableStations());
     }
+
+    @GetMapping("/{operatorId}/station")
+    @Operation(summary = "Get the station managed by a specific operator")
+    @PreAuthorize("hasAnyRole('ADMIN', 'STATION_OPERATOR')")
+    public ResponseEntity<Station> getStationByOperatorId(@PathVariable Long operatorId) {
+        try {
+            StationOperator operator = stationOperatorService.getStationOperatorById(operatorId);
+            if (operator.getStation() != null) {
+                return ResponseEntity.ok(operator.getStation());
+            } else {
+                return ResponseEntity.noContent().build();
+            }
+        } catch (RuntimeException e) {
+            return ResponseEntity.notFound().build();
+        }
+    }
 }

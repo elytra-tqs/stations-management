@@ -10,28 +10,40 @@ import org.springframework.transaction.annotation.Transactional;
 
 import elytra.stations_management.models.Booking;
 import elytra.stations_management.models.Charger;
+import elytra.stations_management.models.User;
 import elytra.stations_management.repositories.BookingRepository;
 import elytra.stations_management.repositories.ChargerRepository;
+import elytra.stations_management.repositories.UserRepository;
+import elytra.stations_management.dto.BookingRequest;
 
 @Service
 public class BookingService {
 
     private final BookingRepository bookingRepository;
     private final ChargerService chargerService;
+    private final UserRepository userRepository;
     private final BookingService self;
 
-    public BookingService(BookingRepository bookingRepository, ChargerService chargerService, @Lazy BookingService self) {
+    public BookingService(BookingRepository bookingRepository, ChargerService chargerService, UserRepository userRepository, @Lazy BookingService self) {
         this.bookingRepository = bookingRepository;
         this.chargerService = chargerService;
+        this.userRepository = userRepository;
         this.self = self;
     }
 
     @Transactional
-    public Booking createBooking(Booking booking) {
-        validateBooking(booking);
-
+    public Booking createBooking(BookingRequest bookingRequest) {
+        // Validate request
+        validateBookingRequest(bookingRequest);
+        
+        // Fetch user
+        User user = userRepository.findById(bookingRequest.getUserId())
+            .orElseThrow(() -> new InvalidBookingException("User not found"));
+            
+        // Fetch charger
+        Charger charger = chargerService.getChargerById(bookingRequest.getChargerId());
+        
         // Check if charger is available
-        Charger charger = booking.getCharger();
         if (charger.getStatus() != Charger.Status.AVAILABLE) {
             throw new InvalidBookingException("Charger is not available for booking");
         }
@@ -39,13 +51,22 @@ public class BookingService {
         // Check for overlapping bookings
         List<Booking> existingBookings = bookingRepository.findOverlappingBookings(
             charger.getId(),
-            booking.getStartTime(),
-            booking.getEndTime()
+            bookingRequest.getStartTime(),
+            bookingRequest.getEndTime()
         );
 
         if (!existingBookings.isEmpty()) {
             throw new InvalidBookingException("Charger is already booked for this time period");
         }
+        
+        // Create booking
+        Booking booking = Booking.builder()
+            .startTime(bookingRequest.getStartTime())
+            .endTime(bookingRequest.getEndTime())
+            .user(user)
+            .charger(charger)
+            .status(Booking.Status.PENDING)
+            .build();
 
         // Update charger status
         chargerService.updateChargerAvailability(charger.getId(), Charger.Status.BEING_USED);
@@ -65,7 +86,7 @@ public class BookingService {
     }
 
     @Transactional(readOnly = true)
-    public List<Booking> getBookingsByUser(String userId) {
+    public List<Booking> getBookingsByUser(Long userId) {
         return bookingRepository.findByUserId(userId);
     }
 
@@ -101,20 +122,20 @@ public class BookingService {
         bookingRepository.delete(booking);
     }
 
-    private void validateBooking(Booking booking) {
-        if (booking.getStartTime() == null) {
+    private void validateBookingRequest(BookingRequest bookingRequest) {
+        if (bookingRequest.getStartTime() == null) {
             throw new InvalidBookingException("Start time is required");
         }
-        if (booking.getEndTime() == null || !booking.getEndTime().isAfter(booking.getStartTime())) {
+        if (bookingRequest.getEndTime() == null || !bookingRequest.getEndTime().isAfter(bookingRequest.getStartTime())) {
             throw new InvalidBookingException("End time must be after start time");
         }
-        if (booking.getUserId() == null || booking.getUserId().trim().isEmpty()) {
+        if (bookingRequest.getUserId() == null) {
             throw new InvalidBookingException("User ID is required");
         }
-        if (booking.getCharger() == null) {
-            throw new InvalidBookingException("Charger is required");
+        if (bookingRequest.getChargerId() == null) {
+            throw new InvalidBookingException("Charger ID is required");
         }
-        if (booking.getStartTime().isBefore(LocalDateTime.now())) {
+        if (bookingRequest.getStartTime().isBefore(LocalDateTime.now())) {
             throw new InvalidBookingException("Cannot create booking in the past");
         }
     }

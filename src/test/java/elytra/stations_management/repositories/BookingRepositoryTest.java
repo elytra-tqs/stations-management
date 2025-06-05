@@ -12,6 +12,7 @@ import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
 import elytra.stations_management.models.Booking;
 import elytra.stations_management.models.Charger;
 import elytra.stations_management.models.Station;
+import elytra.stations_management.models.User;
 
 @DataJpaTest
 class BookingRepositoryTest {
@@ -22,8 +23,23 @@ class BookingRepositoryTest {
     @Autowired
     private BookingRepository bookingRepository;
 
+    private User createAndPersistUser(String username) {
+        User user = User.builder()
+                .username(username)
+                .email(username + "@test.com")
+                .password("password")
+                .firstName("Test")
+                .lastName("User")
+                .userType(User.UserType.EV_DRIVER)
+                .build();
+        return entityManager.persist(user);
+    }
+
     @Test
     void saveAndRetrieveBooking() {
+        // Create and save user
+        User user = createAndPersistUser("user123");
+
         // Create and save station
         Station station = Station.builder()
                 .name("Test Station")
@@ -48,22 +64,27 @@ class BookingRepositoryTest {
         Booking booking = Booking.builder()
                 .startTime(startTime)
                 .endTime(endTime)
-                .userId("user123")
+                .user(user)
                 .charger(charger)
                 .status(Booking.Status.PENDING)
                 .build();
         entityManager.persist(booking);
+        entityManager.flush();
 
         // Retrieve booking
         Booking found = bookingRepository.findById(booking.getId()).orElse(null);
         assertThat(found).isNotNull();
-        assertThat(found.getUserId()).isEqualTo("user123");
+        assertThat(found.getUser().getUsername()).isEqualTo("user123");
         assertThat(found.getEndTime()).isEqualTo(endTime);
         assertThat(found.getStatus()).isEqualTo(Booking.Status.PENDING);
     }
 
     @Test
     void findByUserId() {
+        // Create and save user
+        User user1 = createAndPersistUser("user1");
+        User user2 = createAndPersistUser("user2");
+
         // Create and save station
         Station station = Station.builder()
                 .name("Test Station")
@@ -82,40 +103,39 @@ class BookingRepositoryTest {
                 .build();
         entityManager.persist(charger);
 
-        // Create and save bookings
+        // Create bookings for user1
         LocalDateTime startTime = LocalDateTime.now().plusHours(1);
-        LocalDateTime endTime = startTime.plusHours(1);
         Booking booking1 = Booking.builder()
                 .startTime(startTime)
-                .endTime(endTime)
-                .userId("user123")
+                .endTime(startTime.plusHours(1))
+                .user(user1)
                 .charger(charger)
                 .status(Booking.Status.PENDING)
                 .build();
+        entityManager.persist(booking1);
 
-        LocalDateTime startTime2 = startTime.plusHours(2);
-        LocalDateTime endTime2 = startTime2.plusHours(1);
+        // Create booking for user2
         Booking booking2 = Booking.builder()
-                .startTime(startTime2)
-                .endTime(endTime2)
-                .userId("user123")
+                .startTime(startTime.plusHours(2))
+                .endTime(startTime.plusHours(3))
+                .user(user2)
                 .charger(charger)
                 .status(Booking.Status.CONFIRMED)
                 .build();
-
-        entityManager.persist(booking1);
         entityManager.persist(booking2);
         entityManager.flush();
 
-        // Test findByUserId
-        List<Booking> userBookings = bookingRepository.findByUserId("user123");
-        assertThat(userBookings)
-            .hasSize(2)
-            .allMatch(booking -> booking.getUserId().equals("user123"));
+        // Find bookings by user1
+        List<Booking> user1Bookings = bookingRepository.findByUserId(user1.getId());
+        assertThat(user1Bookings).hasSize(1);
+        assertThat(user1Bookings.get(0).getUser().getUsername()).isEqualTo("user1");
     }
 
     @Test
     void findByChargerId() {
+        // Create and save user
+        User user = createAndPersistUser("user123");
+
         // Create and save station
         Station station = Station.builder()
                 .name("Test Station")
@@ -125,102 +145,30 @@ class BookingRepositoryTest {
                 .build();
         entityManager.persist(station);
 
-        // Create and save charger
-        Charger charger = Charger.builder()
+        // Create and save chargers
+        Charger charger1 = Charger.builder()
                 .type("Type 2")
                 .power(50.0)
                 .status(Charger.Status.AVAILABLE)
                 .station(station)
                 .build();
-        entityManager.persist(charger);
+        entityManager.persist(charger1);
 
-        // Create and save booking
-        LocalDateTime startTime = LocalDateTime.now().plusHours(1);
-        LocalDateTime endTime = startTime.plusHours(1);
-        Booking booking = Booking.builder()
-                .startTime(startTime)
-                .endTime(endTime)
-                .userId("user123")
-                .charger(charger)
-                .status(Booking.Status.PENDING)
-                .build();
-        entityManager.persist(booking);
-
-        // Test findByChargerId
-        List<Booking> chargerBookings = bookingRepository.findByChargerId(charger.getId());
-        assertThat(chargerBookings).hasSize(1);
-        assertThat(chargerBookings.get(0).getCharger().getId()).isEqualTo(charger.getId());
-    }
-
-    @Test
-    void findOverlappingBookings() {
-        // Create and save station
-        Station station = Station.builder()
-                .name("Test Station")
-                .address("123 Main St")
-                .latitude(0.0)
-                .longitude(0.0)
-                .build();
-        entityManager.persist(station);
-
-        // Create and save charger
-        Charger charger = Charger.builder()
-                .type("Type 2")
-                .power(50.0)
+        Charger charger2 = Charger.builder()
+                .type("CCS")
+                .power(150.0)
                 .status(Charger.Status.AVAILABLE)
                 .station(station)
                 .build();
-        entityManager.persist(charger);
+        entityManager.persist(charger2);
 
-        // Create and save booking
+        // Create bookings
         LocalDateTime startTime = LocalDateTime.now().plusHours(1);
-        LocalDateTime endTime = startTime.plusHours(1);
-        Booking booking = Booking.builder()
-                .startTime(startTime)
-                .endTime(endTime)
-                .userId("user123")
-                .charger(charger)
-                .status(Booking.Status.PENDING)
-                .build();
-        entityManager.persist(booking);
-
-        // Test findOverlappingBookings
-        LocalDateTime searchStart = startTime.minusMinutes(30);
-        LocalDateTime searchEnd = endTime.plusMinutes(30);
-        List<Booking> overlappingBookings = bookingRepository.findOverlappingBookings(
-                charger.getId(), searchStart, searchEnd);
-        assertThat(overlappingBookings).hasSize(1);
-        assertThat(overlappingBookings.get(0).getId()).isEqualTo(booking.getId());
-    }
-
-    @Test
-    void findByChargerIdAndStatus() {
-        // Create and save station
-        Station station = Station.builder()
-                .name("Test Station")
-                .address("123 Main St")
-                .latitude(0.0)
-                .longitude(0.0)
-                .build();
-        entityManager.persist(station);
-
-        // Create and save charger
-        Charger charger = Charger.builder()
-                .type("Type 2")
-                .power(50.0)
-                .status(Charger.Status.AVAILABLE)
-                .station(station)
-                .build();
-        entityManager.persist(charger);
-
-        // Create and save bookings
-        LocalDateTime startTime = LocalDateTime.now().plusHours(1);
-        LocalDateTime endTime = startTime.plusHours(1);
         Booking booking1 = Booking.builder()
                 .startTime(startTime)
-                .endTime(endTime)
-                .userId("user123")
-                .charger(charger)
+                .endTime(startTime.plusHours(1))
+                .user(user)
+                .charger(charger1)
                 .status(Booking.Status.PENDING)
                 .build();
         entityManager.persist(booking1);
@@ -228,17 +176,182 @@ class BookingRepositoryTest {
         Booking booking2 = Booking.builder()
                 .startTime(startTime.plusHours(2))
                 .endTime(startTime.plusHours(3))
-                .userId("user456")
+                .user(user)
+                .charger(charger1)
+                .status(Booking.Status.CONFIRMED)
+                .build();
+        entityManager.persist(booking2);
+        entityManager.flush();
+
+        // Find bookings by charger1
+        List<Booking> charger1Bookings = bookingRepository.findByChargerId(charger1.getId());
+        assertThat(charger1Bookings).hasSize(2);
+    }
+
+    @Test
+    void findOverlappingBookings() {
+        // Create and save user
+        User user = createAndPersistUser("user123");
+
+        // Create and save station
+        Station station = Station.builder()
+                .name("Test Station")
+                .address("123 Main St")
+                .latitude(0.0)
+                .longitude(0.0)
+                .build();
+        entityManager.persist(station);
+
+        // Create and save charger
+        Charger charger = Charger.builder()
+                .type("Type 2")
+                .power(50.0)
+                .status(Charger.Status.AVAILABLE)
+                .station(station)
+                .build();
+        entityManager.persist(charger);
+
+        // Create existing booking
+        LocalDateTime existingStart = LocalDateTime.now().plusHours(2);
+        LocalDateTime existingEnd = existingStart.plusHours(2);
+        Booking existingBooking = Booking.builder()
+                .startTime(existingStart)
+                .endTime(existingEnd)
+                .user(user)
+                .charger(charger)
+                .status(Booking.Status.CONFIRMED)
+                .build();
+        entityManager.persist(existingBooking);
+        entityManager.flush();
+
+        // Test overlapping scenarios
+        LocalDateTime overlapStart = existingStart.plusMinutes(30);
+        LocalDateTime overlapEnd = existingEnd.plusMinutes(30);
+        List<Booking> overlapping = bookingRepository.findOverlappingBookings(
+                charger.getId(), overlapStart, overlapEnd);
+        assertThat(overlapping).hasSize(1);
+
+        // Test non-overlapping scenario
+        LocalDateTime nonOverlapStart = existingEnd.plusHours(1);
+        LocalDateTime nonOverlapEnd = nonOverlapStart.plusHours(1);
+        List<Booking> nonOverlapping = bookingRepository.findOverlappingBookings(
+                charger.getId(), nonOverlapStart, nonOverlapEnd);
+        assertThat(nonOverlapping).isEmpty();
+    }
+
+    @Test
+    void findBookingsInTimeRange() {
+        // Create and save user
+        User user = createAndPersistUser("user123");
+
+        // Create and save station
+        Station station = Station.builder()
+                .name("Test Station")
+                .address("123 Main St")
+                .latitude(0.0)
+                .longitude(0.0)
+                .build();
+        entityManager.persist(station);
+
+        // Create and save charger
+        Charger charger = Charger.builder()
+                .type("Type 2")
+                .power(50.0)
+                .status(Charger.Status.AVAILABLE)
+                .station(station)
+                .build();
+        entityManager.persist(charger);
+
+        LocalDateTime baseTime = LocalDateTime.now();
+        
+        // Create bookings at different times
+        Booking booking1 = Booking.builder()
+                .startTime(baseTime.plusHours(1))
+                .endTime(baseTime.plusHours(2))
+                .user(user)
+                .charger(charger)
+                .status(Booking.Status.CONFIRMED)
+                .build();
+        entityManager.persist(booking1);
+
+        Booking booking2 = Booking.builder()
+                .startTime(baseTime.plusHours(3))
+                .endTime(baseTime.plusHours(4))
+                .user(user)
                 .charger(charger)
                 .status(Booking.Status.CONFIRMED)
                 .build();
         entityManager.persist(booking2);
 
-        // Test findByChargerIdAndStatus
-        List<Booking> pendingBookings = bookingRepository.findByChargerIdAndStatus(
-                charger.getId(), Booking.Status.PENDING);
-        assertThat(pendingBookings).hasSize(1);
-        assertThat(pendingBookings.get(0).getCharger().getId()).isEqualTo(charger.getId());
-        assertThat(pendingBookings.get(0).getStatus()).isEqualTo(Booking.Status.PENDING);
+        Booking booking3 = Booking.builder()
+                .startTime(baseTime.plusHours(5))
+                .endTime(baseTime.plusHours(6))
+                .user(user)
+                .charger(charger)
+                .status(Booking.Status.CANCELLED)
+                .build();
+        entityManager.persist(booking3);
+        entityManager.flush();
+
+        // Find bookings in time range
+        List<Booking> bookingsInRange = bookingRepository.findBookingsInTimeRange(
+                charger.getId(), 
+                baseTime, 
+                baseTime.plusHours(4));
+        
+        assertThat(bookingsInRange).hasSize(2);
+        assertThat(bookingsInRange).allMatch(b -> b.getStatus() != Booking.Status.CANCELLED);
     }
-} 
+
+    @Test
+    void findByChargerIdAndStatus() {
+        // Create and save user
+        User user = createAndPersistUser("user123");
+
+        // Create and save station
+        Station station = Station.builder()
+                .name("Test Station")
+                .address("123 Main St")
+                .latitude(0.0)
+                .longitude(0.0)
+                .build();
+        entityManager.persist(station);
+
+        // Create and save charger
+        Charger charger = Charger.builder()
+                .type("Type 2")
+                .power(50.0)
+                .status(Charger.Status.AVAILABLE)
+                .station(station)
+                .build();
+        entityManager.persist(charger);
+
+        LocalDateTime startTime = LocalDateTime.now().plusHours(1);
+        
+        // Create bookings with different statuses
+        Booking pendingBooking = Booking.builder()
+                .startTime(startTime)
+                .endTime(startTime.plusHours(1))
+                .user(user)
+                .charger(charger)
+                .status(Booking.Status.PENDING)
+                .build();
+        entityManager.persist(pendingBooking);
+
+        Booking confirmedBooking = Booking.builder()
+                .startTime(startTime.plusHours(2))
+                .endTime(startTime.plusHours(3))
+                .user(user)
+                .charger(charger)
+                .status(Booking.Status.CONFIRMED)
+                .build();
+        entityManager.persist(confirmedBooking);
+        entityManager.flush();
+
+        // Find confirmed bookings
+        List<Booking> confirmedBookings = bookingRepository.findByChargerIdAndStatus(
+                charger.getId(), Booking.Status.CONFIRMED);
+        assertThat(confirmedBookings).hasSize(1);
+        assertThat(confirmedBookings.get(0).getStatus()).isEqualTo(Booking.Status.CONFIRMED);
+    }
+}

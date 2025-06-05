@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.*;
 
 import elytra.stations_management.models.Booking;
 import elytra.stations_management.services.BookingService;
+import elytra.stations_management.dto.BookingRequest;
 import lombok.RequiredArgsConstructor;
 
 @RestController
@@ -19,9 +20,9 @@ public class BookingController {
     private final BookingService bookingService;
 
     @PostMapping(consumes = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<Booking> createBooking(@RequestBody Booking booking) {
+    public ResponseEntity<Booking> createBooking(@RequestBody BookingRequest bookingRequest) {
         try {
-            Booking createdBooking = bookingService.createBooking(booking);
+            Booking createdBooking = bookingService.createBooking(bookingRequest);
             return ResponseEntity.status(HttpStatus.CREATED).body(createdBooking);
         } catch (RuntimeException e) {
             return ResponseEntity.badRequest().build();
@@ -44,7 +45,7 @@ public class BookingController {
     }
 
     @GetMapping(value = "/user/{userId}", produces = MediaType.APPLICATION_JSON_VALUE)
-    public ResponseEntity<List<Booking>> getBookingsByUser(@PathVariable String userId) {
+    public ResponseEntity<List<Booking>> getBookingsByUser(@PathVariable Long userId) {
         return ResponseEntity.ok(bookingService.getBookingsByUser(userId));
     }
 
