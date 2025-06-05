@@ -12,7 +12,7 @@ import elytra.stations_management.models.Booking;
 @Repository
 public interface BookingRepository extends JpaRepository<Booking, Long> {
     
-    List<Booking> findByUserId(String userId);
+    List<Booking> findByUserId(Long userId);
     
     List<Booking> findByChargerId(Long chargerId);
 

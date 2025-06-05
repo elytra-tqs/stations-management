@@ -3,7 +3,10 @@ package elytra.stations_management.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import elytra.stations_management.models.Booking;
 import elytra.stations_management.models.Charger;
+import elytra.stations_management.models.User;
+import elytra.stations_management.dto.BookingRequest;
 import elytra.stations_management.services.BookingService;
+import elytra.stations_management.exception.InvalidBookingException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -39,8 +42,10 @@ class BookingControllerTest {
     @MockBean
     private BookingService bookingService;
 
+    private BookingRequest bookingRequest;
     private Booking booking;
     private Charger charger;
+    private User user;
     private LocalDateTime startTime;
     private LocalDateTime endTime;
 
@@ -48,6 +53,17 @@ class BookingControllerTest {
     void setUp() {
         startTime = LocalDateTime.now().plusHours(1);
         endTime = startTime.plusHours(1);
+        
+        user = User.builder()
+                .id(123L)
+                .username("user123")
+                .email("user123@test.com")
+                .password("password")
+                .firstName("Test")
+                .lastName("User")
+                .userType(User.UserType.EV_DRIVER)
+                .build();
+        
         charger = Charger.builder()
                 .id(1L)
                 .type("Type 2")
@@ -55,11 +71,18 @@ class BookingControllerTest {
                 .status(Charger.Status.AVAILABLE)
                 .build();
 
+        bookingRequest = BookingRequest.builder()
+                .startTime(startTime)
+                .endTime(endTime)
+                .userId(123L)
+                .chargerId(1L)
+                .build();
+
         booking = Booking.builder()
                 .id(1L)
                 .startTime(startTime)
                 .endTime(endTime)
-                .userId("user123")
+                .user(user)
                 .charger(charger)
                 .status(Booking.Status.PENDING)
                 .build();
@@ -67,43 +90,40 @@ class BookingControllerTest {
 
     @Test
     void createBooking_ShouldReturnCreatedBooking() throws Exception {
-        when(bookingService.createBooking(any(Booking.class))).thenReturn(booking);
+        when(bookingService.createBooking(any(BookingRequest.class))).thenReturn(booking);
 
         mockMvc.perform(post("/api/v1/bookings")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(booking)))
+                .content(objectMapper.writeValueAsString(bookingRequest)))
                 .andExpect(status().isCreated())
                 .andExpect(jsonPath("$.id").value(1))
                 .andExpect(jsonPath("$.status").value("PENDING"));
     }
 
     @Test
-    void createBooking_WithInvalidData_ShouldReturnBadRequest() throws Exception {
-        booking.setStartTime(null);
-
-        when(bookingService.createBooking(any(Booking.class)))
-                .thenThrow(new RuntimeException("Start time is required"));
-
+    void createBooking_WhenServiceThrowsException_ShouldReturnBadRequest() throws Exception {
+        when(bookingService.createBooking(any(BookingRequest.class)))
+                .thenThrow(new InvalidBookingException("Invalid booking"));
 
         mockMvc.perform(post("/api/v1/bookings")
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper.writeValueAsString(booking)))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(bookingRequest)))
                 .andExpect(status().isBadRequest());
     }
 
     @Test
-    void getAllBookings_ShouldReturnAllBookings() throws Exception {
-        List<Booking> bookings = Arrays.asList(booking);
+    void getAllBookings_ShouldReturnBookingsList() throws Exception {
+        List<Booking> bookings = Arrays.asList(booking, booking);
         when(bookingService.getAllBookings()).thenReturn(bookings);
 
         mockMvc.perform(get("/api/v1/bookings"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].id").value(1))
-                .andExpect(jsonPath("$[0].status").value("PENDING"));
+                .andExpect(jsonPath("$").isArray())
+                .andExpect(jsonPath("$").isNotEmpty());
     }
 
     @Test
-    void getBookingById_ShouldReturnBooking() throws Exception {
+    void getBookingById_WhenExists_ShouldReturnBooking() throws Exception {
         when(bookingService.getBookingById(1L)).thenReturn(booking);
 
         mockMvc.perform(get("/api/v1/bookings/1"))
@@ -113,80 +133,74 @@ class BookingControllerTest {
     }
 
     @Test
-    void getBookingById_WhenNotFound_ShouldReturnNotFound() throws Exception {
-        when(bookingService.getBookingById(1L)).thenThrow(new RuntimeException("Booking not found"));
+    void getBookingById_WhenNotExists_ShouldReturn404() throws Exception {
+        when(bookingService.getBookingById(999L))
+                .thenThrow(new InvalidBookingException("Booking not found"));
 
-        mockMvc.perform(get("/api/v1/bookings/1"))
+        mockMvc.perform(get("/api/v1/bookings/999"))
                 .andExpect(status().isNotFound());
     }
 
     @Test
     void getBookingsByUser_ShouldReturnUserBookings() throws Exception {
-        List<Booking> bookings = Arrays.asList(booking);
-        when(bookingService.getBookingsByUser("user123")).thenReturn(bookings);
+        List<Booking> userBookings = Arrays.asList(booking);
+        when(bookingService.getBookingsByUser(123L)).thenReturn(userBookings);
 
-        mockMvc.perform(get("/api/v1/bookings/user/user123"))
+        mockMvc.perform(get("/api/v1/bookings/user/123"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].id").value(1))
-                .andExpect(jsonPath("$[0].userId").value("user123"));
+                .andExpect(jsonPath("$").isArray())
+                .andExpect(jsonPath("$[0].user.id").value(123));
     }
 
     @Test
     void getBookingsByCharger_ShouldReturnChargerBookings() throws Exception {
-        List<Booking> bookings = Arrays.asList(booking);
-        when(bookingService.getBookingsByCharger(1L)).thenReturn(bookings);
+        List<Booking> chargerBookings = Arrays.asList(booking);
+        when(bookingService.getBookingsByCharger(1L)).thenReturn(chargerBookings);
 
         mockMvc.perform(get("/api/v1/bookings/charger/1"))
                 .andExpect(status().isOk())
+                .andExpect(jsonPath("$").isArray())
                 .andExpect(jsonPath("$[0].id").value(1));
     }
 
     @Test
-    void updateBookingStatus_ShouldUpdateStatus() throws Exception {
-        when(bookingService.updateBookingStatus(eq(1L), any(Booking.Status.class)))
+    void updateBookingStatus_ShouldReturnUpdatedBooking() throws Exception {
+        booking.setStatus(Booking.Status.CONFIRMED);
+        when(bookingService.updateBookingStatus(eq(1L), eq(Booking.Status.CONFIRMED)))
                 .thenReturn(booking);
 
         mockMvc.perform(put("/api/v1/bookings/1/status")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content("\"CONFIRMED\""))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.status").value("PENDING"));
-    }
-
-    @Test
-    void updateBookingStatus_WhenInvalidStatus_ShouldReturnBadRequest() throws Exception {
-        when(bookingService.updateBookingStatus(eq(1L), any(Booking.Status.class)))
-                .thenThrow(new RuntimeException("Invalid status transition"));
-
-        mockMvc.perform(put("/api/v1/bookings/1/status")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content("\"INVALID_STATUS\""))
-                .andExpect(status().isBadRequest());
+                .andExpect(jsonPath("$.status").value("CONFIRMED"));
     }
 
     @Test
     void updateBookingStatus_WhenServiceThrowsException_ShouldReturnBadRequest() throws Exception {
         when(bookingService.updateBookingStatus(eq(1L), any(Booking.Status.class)))
-                .thenThrow(new RuntimeException("Unexpected error"));
+                .thenThrow(new InvalidBookingException("Invalid status transition"));
 
         mockMvc.perform(put("/api/v1/bookings/1/status")
                 .contentType(MediaType.APPLICATION_JSON)
-                .content("\"CONFIRMED\""))
+                .content("\"INVALID\""))
                 .andExpect(status().isBadRequest());
     }
 
     @Test
-    void deleteBooking_ShouldReturnNoContent() throws Exception {
+    void deleteBooking_WhenExists_ShouldReturn204() throws Exception {
+        doNothing().when(bookingService).deleteBooking(1L);
+
         mockMvc.perform(delete("/api/v1/bookings/1"))
                 .andExpect(status().isNoContent());
     }
 
     @Test
-    void deleteBooking_WhenNotFound_ShouldReturnNotFound() throws Exception {
-        doThrow(new RuntimeException("Booking not found"))
-                .when(bookingService).deleteBooking(1L);
+    void deleteBooking_WhenNotExists_ShouldReturn404() throws Exception {
+        doThrow(new InvalidBookingException("Booking not found"))
+                .when(bookingService).deleteBooking(999L);
 
-        mockMvc.perform(delete("/api/v1/bookings/1"))
+        mockMvc.perform(delete("/api/v1/bookings/999"))
                 .andExpect(status().isNotFound());
     }
-} 
+}

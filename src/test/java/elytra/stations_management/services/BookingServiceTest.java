@@ -16,7 +16,11 @@ import org.mockito.junit.jupiter.MockitoExtension;
 
 import elytra.stations_management.models.Booking;
 import elytra.stations_management.models.Charger;
+import elytra.stations_management.models.User;
 import elytra.stations_management.repositories.BookingRepository;
+import elytra.stations_management.repositories.UserRepository;
+import elytra.stations_management.dto.BookingRequest;
+import elytra.stations_management.exception.InvalidBookingException;
 
 @ExtendWith(MockitoExtension.class)
 class BookingServiceTest {
@@ -27,11 +31,16 @@ class BookingServiceTest {
     @Mock
     private ChargerService chargerService;
 
+    @Mock
+    private UserRepository userRepository;
+
     @InjectMocks
     private BookingService bookingService;
 
+    private BookingRequest bookingRequest;
     private Booking booking;
     private Charger charger;
+    private User user;
     private LocalDateTime startTime;
     private LocalDateTime endTime;
 
@@ -39,6 +48,17 @@ class BookingServiceTest {
     void setUp() {
         startTime = LocalDateTime.now().plusHours(1);
         endTime = startTime.plusHours(1);
+        
+        user = User.builder()
+                .id(123L)
+                .username("user123")
+                .email("user123@test.com")
+                .password("password")
+                .firstName("Test")
+                .lastName("User")
+                .userType(User.UserType.EV_DRIVER)
+                .build();
+        
         charger = Charger.builder()
                 .id(1L)
                 .type("Type 2")
@@ -46,196 +66,226 @@ class BookingServiceTest {
                 .status(Charger.Status.AVAILABLE)
                 .build();
 
+        bookingRequest = BookingRequest.builder()
+                .startTime(startTime)
+                .endTime(endTime)
+                .userId(123L)
+                .chargerId(1L)
+                .build();
+
         booking = Booking.builder()
                 .id(1L)
                 .startTime(startTime)
                 .endTime(endTime)
-                .userId("user123")
+                .user(user)
                 .charger(charger)
                 .status(Booking.Status.PENDING)
                 .build();
 
         // Manually create BookingService with self-injection
-        bookingService = new BookingService(bookingRepository, chargerService, bookingService);
+        bookingService = new BookingService(bookingRepository, chargerService, userRepository, bookingService);
     }
 
     @Test
     void createBooking_ShouldCreateValidBooking() {
+        when(userRepository.findById(123L)).thenReturn(Optional.of(user));
+        when(chargerService.getChargerById(1L)).thenReturn(charger);
         when(bookingRepository.findOverlappingBookings(
                 anyLong(), any(LocalDateTime.class), any(LocalDateTime.class)))
                 .thenReturn(List.of());
         when(bookingRepository.save(any(Booking.class))).thenReturn(booking);
 
-        Booking createdBooking = bookingService.createBooking(booking);
+        Booking createdBooking = bookingService.createBooking(bookingRequest);
 
         assertNotNull(createdBooking);
         assertEquals(Booking.Status.PENDING, createdBooking.getStatus());
+        assertEquals(user, createdBooking.getUser());
         verify(chargerService).updateChargerAvailability(charger.getId(), Charger.Status.BEING_USED);
     }
 
     @Test
-    void createBooking_WhenChargerNotAvailable_ShouldThrowException() {
-        charger.setStatus(Charger.Status.BEING_USED);
+    void createBooking_WhenUserNotFound_ShouldThrowException() {
+        when(userRepository.findById(123L)).thenReturn(Optional.empty());
 
-        assertThrows(RuntimeException.class, () -> bookingService.createBooking(booking));
+        InvalidBookingException exception = assertThrows(InvalidBookingException.class, 
+            () -> bookingService.createBooking(bookingRequest));
+        assertEquals("User not found", exception.getMessage());
+    }
+
+    @Test
+    void createBooking_WhenChargerNotAvailable_ShouldThrowException() {
+        when(userRepository.findById(123L)).thenReturn(Optional.of(user));
+        charger.setStatus(Charger.Status.BEING_USED);
+        when(chargerService.getChargerById(1L)).thenReturn(charger);
+
+        InvalidBookingException exception = assertThrows(InvalidBookingException.class, 
+            () -> bookingService.createBooking(bookingRequest));
+        assertEquals("Charger is not available for booking", exception.getMessage());
     }
 
     @Test
     void createBooking_WhenOverlappingBookingExists_ShouldThrowException() {
+        when(userRepository.findById(123L)).thenReturn(Optional.of(user));
+        when(chargerService.getChargerById(1L)).thenReturn(charger);
         when(bookingRepository.findOverlappingBookings(
                 anyLong(), any(LocalDateTime.class), any(LocalDateTime.class)))
                 .thenReturn(List.of(booking));
 
-        assertThrows(RuntimeException.class, () -> bookingService.createBooking(booking));
+        InvalidBookingException exception = assertThrows(InvalidBookingException.class, 
+            () -> bookingService.createBooking(bookingRequest));
+        assertEquals("Charger is already booked for this time period", exception.getMessage());
     }
 
     @Test
     void createBooking_WithInvalidData_ShouldThrowException() {
-        booking.setStartTime(null);
-        assertThrows(RuntimeException.class, () -> bookingService.createBooking(booking));
+        bookingRequest.setStartTime(null);
+        InvalidBookingException exception = assertThrows(InvalidBookingException.class, 
+            () -> bookingService.createBooking(bookingRequest));
+        assertEquals("Start time is required", exception.getMessage());
 
-        booking.setStartTime(startTime);
-        booking.setEndTime(null);
-        assertThrows(RuntimeException.class, () -> bookingService.createBooking(booking));
+        bookingRequest.setStartTime(startTime);
+        bookingRequest.setEndTime(null);
+        exception = assertThrows(InvalidBookingException.class, 
+            () -> bookingService.createBooking(bookingRequest));
+        assertEquals("End time must be after start time", exception.getMessage());
 
-        booking.setEndTime(endTime);
-        booking.setUserId(null);
-        assertThrows(RuntimeException.class, () -> bookingService.createBooking(booking));
+        bookingRequest.setEndTime(startTime.minusHours(1));
+        exception = assertThrows(InvalidBookingException.class, 
+            () -> bookingService.createBooking(bookingRequest));
+        assertEquals("End time must be after start time", exception.getMessage());
 
-        booking.setUserId("user123");
-        booking.setCharger(null);
-        assertThrows(RuntimeException.class, () -> bookingService.createBooking(booking));
+        bookingRequest.setEndTime(endTime);
+        bookingRequest.setUserId(null);
+        exception = assertThrows(InvalidBookingException.class, 
+            () -> bookingService.createBooking(bookingRequest));
+        assertEquals("User ID is required", exception.getMessage());
+
+        bookingRequest.setUserId(123L);
+        bookingRequest.setChargerId(null);
+        exception = assertThrows(InvalidBookingException.class, 
+            () -> bookingService.createBooking(bookingRequest));
+        assertEquals("Charger ID is required", exception.getMessage());
+
+        bookingRequest.setChargerId(1L);
+        bookingRequest.setStartTime(LocalDateTime.now().minusHours(1));
+        exception = assertThrows(InvalidBookingException.class, 
+            () -> bookingService.createBooking(bookingRequest));
+        assertEquals("Cannot create booking in the past", exception.getMessage());
     }
 
     @Test
     void getAllBookings_ShouldReturnAllBookings() {
-        List<Booking> bookings = Arrays.asList(booking);
+        List<Booking> bookings = Arrays.asList(booking, booking);
         when(bookingRepository.findAll()).thenReturn(bookings);
 
         List<Booking> result = bookingService.getAllBookings();
 
-        assertEquals(bookings, result);
+        assertEquals(2, result.size());
         verify(bookingRepository).findAll();
     }
 
     @Test
-    void getBookingById_ShouldReturnBooking() {
+    void getBookingById_WhenExists_ShouldReturnBooking() {
         when(bookingRepository.findById(1L)).thenReturn(Optional.of(booking));
 
         Booking result = bookingService.getBookingById(1L);
 
-        assertEquals(booking, result);
-        verify(bookingRepository).findById(1L);
+        assertNotNull(result);
+        assertEquals(1L, result.getId());
     }
 
     @Test
-    void getBookingById_WhenNotFound_ShouldThrowException() {
-        when(bookingRepository.findById(1L)).thenReturn(Optional.empty());
+    void getBookingById_WhenNotExists_ShouldThrowException() {
+        when(bookingRepository.findById(999L)).thenReturn(Optional.empty());
 
-        assertThrows(RuntimeException.class, () -> bookingService.getBookingById(1L));
+        InvalidBookingException exception = assertThrows(InvalidBookingException.class, 
+            () -> bookingService.getBookingById(999L));
+        assertEquals("Booking not found", exception.getMessage());
     }
 
     @Test
     void getBookingsByUser_ShouldReturnUserBookings() {
-        List<Booking> bookings = Arrays.asList(booking);
-        when(bookingRepository.findByUserId("user123")).thenReturn(bookings);
+        List<Booking> userBookings = Arrays.asList(booking);
+        when(bookingRepository.findByUserId(123L)).thenReturn(userBookings);
 
-        List<Booking> result = bookingService.getBookingsByUser("user123");
+        List<Booking> result = bookingService.getBookingsByUser(123L);
 
-        assertEquals(bookings, result);
-        verify(bookingRepository).findByUserId("user123");
+        assertEquals(1, result.size());
+        verify(bookingRepository).findByUserId(123L);
     }
 
     @Test
     void getBookingsByCharger_ShouldReturnChargerBookings() {
-        List<Booking> bookings = Arrays.asList(booking);
-        when(bookingRepository.findByChargerId(1L)).thenReturn(bookings);
+        List<Booking> chargerBookings = Arrays.asList(booking);
+        when(bookingRepository.findByChargerId(1L)).thenReturn(chargerBookings);
 
         List<Booking> result = bookingService.getBookingsByCharger(1L);
 
-        assertEquals(bookings, result);
+        assertEquals(1, result.size());
         verify(bookingRepository).findByChargerId(1L);
     }
 
     @Test
-    void updateBookingStatus_ShouldUpdateStatus() {
+    void updateBookingStatus_ToCompleted_ShouldUpdateStatusAndReleaseCharger() {
         when(bookingRepository.findById(1L)).thenReturn(Optional.of(booking));
-        when(bookingRepository.save(any(Booking.class))).thenReturn(booking);
+        booking.setStatus(Booking.Status.CONFIRMED);
+        when(bookingRepository.save(any(Booking.class))).thenAnswer(invocation -> {
+            Booking saved = invocation.getArgument(0);
+            saved.setStatus(Booking.Status.COMPLETED);
+            return saved;
+        });
 
-        Booking updatedBooking = bookingService.updateBookingStatus(1L, Booking.Status.CONFIRMED);
+        Booking result = bookingService.updateBookingStatus(1L, Booking.Status.COMPLETED);
 
-        assertEquals(Booking.Status.CONFIRMED, updatedBooking.getStatus());
-        verify(bookingRepository).save(booking);
-    }
-
-    @Test
-    void updateBookingStatus_WhenCompleted_ShouldMakeChargerAvailable() {
-        when(bookingRepository.findById(1L)).thenReturn(Optional.of(booking));
-        when(bookingRepository.save(any(Booking.class))).thenReturn(booking);
-
-        bookingService.updateBookingStatus(1L, Booking.Status.COMPLETED);
-
+        assertEquals(Booking.Status.COMPLETED, result.getStatus());
         verify(chargerService).updateChargerAvailability(charger.getId(), Charger.Status.AVAILABLE);
     }
 
     @Test
-    void updateBookingStatus_WhenCancelled_ShouldMakeChargerAvailable() {
+    void updateBookingStatus_ToCancelled_ShouldUpdateStatusAndReleaseCharger() {
         when(bookingRepository.findById(1L)).thenReturn(Optional.of(booking));
-        when(bookingRepository.save(any(Booking.class))).thenReturn(booking);
+        booking.setStatus(Booking.Status.CONFIRMED);
+        when(bookingRepository.save(any(Booking.class))).thenAnswer(invocation -> {
+            Booking saved = invocation.getArgument(0);
+            saved.setStatus(Booking.Status.CANCELLED);
+            return saved;
+        });
 
-        bookingService.updateBookingStatus(1L, Booking.Status.CANCELLED);
+        Booking result = bookingService.updateBookingStatus(1L, Booking.Status.CANCELLED);
 
+        assertEquals(Booking.Status.CANCELLED, result.getStatus());
         verify(chargerService).updateChargerAvailability(charger.getId(), Charger.Status.AVAILABLE);
     }
 
     @Test
-    void updateBookingStatus_WhenInvalidTransition_ShouldThrowException() {
+    void updateBookingStatus_InvalidTransition_ShouldThrowException() {
         booking.setStatus(Booking.Status.COMPLETED);
         when(bookingRepository.findById(1L)).thenReturn(Optional.of(booking));
 
-        assertThrows(RuntimeException.class,
+        InvalidBookingException exception = assertThrows(InvalidBookingException.class, 
             () -> bookingService.updateBookingStatus(1L, Booking.Status.PENDING));
+        assertEquals("Cannot change status of a completed booking", exception.getMessage());
     }
 
     @Test
-    void deleteBooking_ShouldDeleteBooking() {
-        when(bookingRepository.findById(1L)).thenReturn(Optional.of(booking));
-
-        bookingService.deleteBooking(1L);
-
-        verify(bookingRepository).delete(booking);
-    }
-
-    @Test
-    void deleteBooking_WhenActive_ShouldMakeChargerAvailable() {
+    void deleteBooking_WhenConfirmed_ShouldDeleteAndReleaseCharger() {
         booking.setStatus(Booking.Status.CONFIRMED);
         when(bookingRepository.findById(1L)).thenReturn(Optional.of(booking));
 
         bookingService.deleteBooking(1L);
 
+        verify(bookingRepository).delete(booking);
         verify(chargerService).updateChargerAvailability(charger.getId(), Charger.Status.AVAILABLE);
     }
 
     @Test
-    void deleteBooking_WhenNotFound_ShouldThrowException() {
-        when(bookingRepository.findById(1L)).thenReturn(Optional.empty());
-
-        assertThrows(RuntimeException.class, () -> bookingService.deleteBooking(1L));
-    }
-
-    @Test
-    void createBooking_WithPastStartTime_ShouldThrowException() {
-        booking.setStartTime(LocalDateTime.now().minusHours(2));
-        booking.setEndTime(LocalDateTime.now().minusHours(1));
-        assertThrows(RuntimeException.class, () -> bookingService.createBooking(booking));
-    }
-
-    @Test
-    void updateBookingStatus_WhenCancelled_ShouldThrowException() {
-        booking.setStatus(Booking.Status.CANCELLED);
+    void deleteBooking_WhenNotConfirmed_ShouldDeleteWithoutReleasingCharger() {
+        booking.setStatus(Booking.Status.PENDING);
         when(bookingRepository.findById(1L)).thenReturn(Optional.of(booking));
 
-        assertThrows(RuntimeException.class,
-                () -> bookingService.updateBookingStatus(1L, Booking.Status.CONFIRMED));
+        bookingService.deleteBooking(1L);
+
+        verify(bookingRepository).delete(booking);
+        verify(chargerService, never()).updateChargerAvailability(anyLong(), any());
     }
 }

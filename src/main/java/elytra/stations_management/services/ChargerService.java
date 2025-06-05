@@ -19,6 +19,12 @@ public class ChargerService {
     }
 
     @Transactional(readOnly = true)
+    public Charger getChargerById(Long chargerId) {
+        return chargerRepository.findById(chargerId)
+                .orElseThrow(() -> new RuntimeException("Charger not found"));
+    }
+
+    @Transactional(readOnly = true)
     public Charger.Status getChargerAvailability(Long chargerId) {
         Charger charger = chargerRepository.findById(chargerId)
                 .orElseThrow(() -> new RuntimeException("Charger not found"));
