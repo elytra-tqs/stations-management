@@ -354,4 +354,170 @@ class StationOperatorControllerTest {
 
         verify(stationOperatorService).getStationOperatorById(99L);
     }
+
+    @Test
+    @WithMockUser(roles = "ADMIN")
+    void getStationOperatorByStationId_ShouldReturn404_WhenNotFound() throws Exception {
+        // Given
+        when(stationOperatorService.getStationOperatorByStationId(99L))
+                .thenThrow(new RuntimeException("No operator found for station"));
+
+        // When & Then
+        mockMvc.perform(get("/api/v1/station-operators/station/99"))
+                .andExpect(status().isNotFound());
+
+        verify(stationOperatorService).getStationOperatorByStationId(99L);
+    }
+
+    @Test
+    @WithMockUser(roles = "ADMIN")
+    void updateStationOperator_ShouldReturn400_WhenInvalidData() throws Exception {
+        // Given
+        StationOperator invalidUpdate = StationOperator.builder()
+                .user(User.builder().build())
+                .build();
+
+        when(stationOperatorService.updateStationOperator(eq(1L), any()))
+                .thenThrow(new RuntimeException("Invalid update data"));
+
+        // When & Then
+        mockMvc.perform(put("/api/v1/station-operators/1")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(invalidUpdate)))
+                .andExpect(status().isBadRequest());
+
+        verify(stationOperatorService).updateStationOperator(eq(1L), any());
+    }
+
+    @Test
+    @WithMockUser(roles = "STATION_OPERATOR")
+    void releaseStation_ShouldReturn400_WhenNoStationAssigned() throws Exception {
+        // Given
+        when(stationOperatorService.releaseStation(2L))
+                .thenThrow(new RuntimeException("Operator doesn't manage any station"));
+
+        // When & Then
+        mockMvc.perform(post("/api/v1/station-operators/2/release-station"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.error").value("Operator doesn't manage any station"));
+
+        verify(stationOperatorService).releaseStation(2L);
+    }
+
+    @Test
+    @WithMockUser(roles = "STATION_OPERATOR")
+    void getStationOperatorByUserId_ShouldReturn404_WhenNotFound() throws Exception {
+        // Given
+        when(stationOperatorService.getStationOperatorByUserId(99L))
+                .thenThrow(new RuntimeException("Station operator not found for user"));
+
+        // When & Then
+        mockMvc.perform(get("/api/v1/station-operators/user/99"))
+                .andExpect(status().isNotFound());
+
+        verify(stationOperatorService).getStationOperatorByUserId(99L);
+    }
+
+    @Test
+    @WithMockUser(roles = "ADMIN")
+    void registerStationOperator_ShouldCreateOperatorWithoutStation_WhenStationIdNull() throws Exception {
+        // Given
+        OperatorRegistrationRequest request = new OperatorRegistrationRequest();
+        request.setOperator(StationOperator.builder().build());
+        request.setUser(User.builder()
+                .username("operatornostation")
+                .password("password123")
+                .email("nostation@example.com")
+                .build());
+        request.setStationId(null);
+
+        StationOperator operatorWithoutStation = StationOperator.builder()
+                .id(3L)
+                .user(User.builder()
+                        .id(3L)
+                        .username("operatornostation")
+                        .email("nostation@example.com")
+                        .userType(User.UserType.STATION_OPERATOR)
+                        .build())
+                .station(null)
+                .build();
+
+        when(stationOperatorService.registerStationOperator(any(), any(), isNull()))
+                .thenReturn(operatorWithoutStation);
+
+        // When & Then
+        mockMvc.perform(post("/api/v1/station-operators")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(3))
+                .andExpect(jsonPath("$.user.username").value("operatornostation"))
+                .andExpect(jsonPath("$.station").doesNotExist());
+
+        verify(stationOperatorService).registerStationOperator(any(), any(), isNull());
+    }
+
+    @Test
+    @WithMockUser(roles = "ADMIN")
+    void deleteStationOperator_ShouldReturn404_WhenNotFound() throws Exception {
+        // Given
+        doThrow(new RuntimeException("Station operator not found"))
+                .when(stationOperatorService).deleteStationOperator(99L);
+
+        // When & Then
+        mockMvc.perform(delete("/api/v1/station-operators/99"))
+                .andExpect(status().isNotFound());
+
+        verify(stationOperatorService).deleteStationOperator(99L);
+    }
+
+    @Test
+    @WithMockUser(username = "driver", authorities = "ROLE_EV_DRIVER")
+    void getAllStationOperators_ShouldReturn403_WhenNotAuthorized() throws Exception {
+        // When & Then
+        mockMvc.perform(get("/api/v1/station-operators"))
+                .andExpect(status().isForbidden());
+
+        verify(stationOperatorService, never()).getAllStationOperators();
+    }
+
+    @Test
+    @WithMockUser(username = "driver", authorities = "ROLE_EV_DRIVER")
+    void claimStation_ShouldReturn403_WhenNotAuthorized() throws Exception {
+        // When & Then
+        mockMvc.perform(post("/api/v1/station-operators/1/claim-station/1"))
+                .andExpect(status().isForbidden());
+
+        verify(stationOperatorService, never()).claimStation(anyLong(), anyLong());
+    }
+
+    @Test
+    @WithMockUser(username = "driver", authorities = "ROLE_EV_DRIVER")
+    void deleteStationOperator_ShouldReturn403_WhenNotAdmin() throws Exception {
+        // When & Then
+        mockMvc.perform(delete("/api/v1/station-operators/1"))
+                .andExpect(status().isForbidden());
+
+        verify(stationOperatorService, never()).deleteStationOperator(anyLong());
+    }
+
+    @Test
+    @WithMockUser(roles = "ADMIN")
+    void updateStationOperator_ShouldReturn400_WhenOperatorNotFound() throws Exception {
+        // Given
+        StationOperator updateRequest = StationOperator.builder()
+                .user(User.builder().email("updated@example.com").build())
+                .build();
+
+        when(stationOperatorService.updateStationOperator(eq(99L), any()))
+                .thenThrow(new RuntimeException("Station operator not found"));
+
+        // When & Then
+        mockMvc.perform(put("/api/v1/station-operators/99")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(updateRequest)))
+                .andExpect(status().isBadRequest());
+
+        verify(stationOperatorService).updateStationOperator(eq(99L), any());
+    }
 }

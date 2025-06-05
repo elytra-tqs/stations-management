@@ -148,6 +148,258 @@ class AuthControllerTest {
     }
 
     @Test
+    void login_ShouldReturnStationOperatorInfo_WhenOperatorHasStation() throws Exception {
+        // Given
+        User operatorUser = User.builder()
+                .id(2L)
+                .username("operator1")
+                .email("operator@example.com")
+                .userType(User.UserType.STATION_OPERATOR)
+                .build();
+
+        Station station = Station.builder()
+                .id(1L)
+                .name("Test Station")
+                .build();
+
+        StationOperator operator = StationOperator.builder()
+                .id(1L)
+                .user(operatorUser)
+                .station(station)
+                .build();
+
+        AuthRequest operatorAuthRequest = new AuthRequest();
+        operatorAuthRequest.setUsername("operator1");
+        operatorAuthRequest.setPassword("password");
+
+        Authentication authentication = mock(Authentication.class);
+        when(authentication.isAuthenticated()).thenReturn(true);
+
+        when(authenticationManager.authenticate(any(Authentication.class)))
+                .thenReturn(authentication);
+        when(jwtService.generateToken("operator1")).thenReturn("operator-jwt-token");
+        when(userService.getUserByUsername("operator1")).thenReturn(operatorUser);
+        when(stationOperatorService.getStationOperatorByUserId(2L)).thenReturn(operator);
+
+        // When & Then
+        mockMvc.perform(post("/api/v1/auth/login")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(operatorAuthRequest)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.token").value("operator-jwt-token"))
+                .andExpect(jsonPath("$.username").value("operator1"))
+                .andExpect(jsonPath("$.userType").value("STATION_OPERATOR"))
+                .andExpect(jsonPath("$.userId").value(2))
+                .andExpect(jsonPath("$.operatorId").value(1))
+                .andExpect(jsonPath("$.stationId").value(1))
+                .andExpect(jsonPath("$.stationName").value("Test Station"));
+
+        verify(stationOperatorService).getStationOperatorByUserId(2L);
+    }
+
+    @Test
+    void login_ShouldReturnAdminInfo_WhenUserIsAdmin() throws Exception {
+        // Given
+        User adminUser = User.builder()
+                .id(3L)
+                .username("admin1")
+                .email("admin@example.com")
+                .userType(User.UserType.ADMIN)
+                .build();
+
+        Admin admin = Admin.builder()
+                .id(1L)
+                .user(adminUser)
+                .build();
+
+        AuthRequest adminAuthRequest = new AuthRequest();
+        adminAuthRequest.setUsername("admin1");
+        adminAuthRequest.setPassword("password");
+
+        Authentication authentication = mock(Authentication.class);
+        when(authentication.isAuthenticated()).thenReturn(true);
+
+        when(authenticationManager.authenticate(any(Authentication.class)))
+                .thenReturn(authentication);
+        when(jwtService.generateToken("admin1")).thenReturn("admin-jwt-token");
+        when(userService.getUserByUsername("admin1")).thenReturn(adminUser);
+        when(adminService.getAdminByUserId(3L)).thenReturn(admin);
+
+        // When & Then
+        mockMvc.perform(post("/api/v1/auth/login")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(adminAuthRequest)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.token").value("admin-jwt-token"))
+                .andExpect(jsonPath("$.username").value("admin1"))
+                .andExpect(jsonPath("$.userType").value("ADMIN"))
+                .andExpect(jsonPath("$.userId").value(3))
+                .andExpect(jsonPath("$.adminId").value(1));
+
+        verify(adminService).getAdminByUserId(3L);
+    }
+
+    @Test
+    void login_ShouldHandleMissingDriverInfo_WhenDriverNotFullySetup() throws Exception {
+        // Given
+        User driverUser = User.builder()
+                .id(4L)
+                .username("newdriver")
+                .email("newdriver@example.com")
+                .userType(User.UserType.EV_DRIVER)
+                .build();
+
+        AuthRequest driverAuthRequest = new AuthRequest();
+        driverAuthRequest.setUsername("newdriver");
+        driverAuthRequest.setPassword("password");
+
+        Authentication authentication = mock(Authentication.class);
+        when(authentication.isAuthenticated()).thenReturn(true);
+
+        when(authenticationManager.authenticate(any(Authentication.class)))
+                .thenReturn(authentication);
+        when(jwtService.generateToken("newdriver")).thenReturn("driver-jwt-token");
+        when(userService.getUserByUsername("newdriver")).thenReturn(driverUser);
+        when(evDriverService.getDriverByUserId(4L))
+                .thenThrow(new RuntimeException("Driver not found"));
+
+        // When & Then
+        mockMvc.perform(post("/api/v1/auth/login")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(driverAuthRequest)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.token").value("driver-jwt-token"))
+                .andExpect(jsonPath("$.username").value("newdriver"))
+                .andExpect(jsonPath("$.userType").value("EV_DRIVER"))
+                .andExpect(jsonPath("$.userId").value(4))
+                .andExpect(jsonPath("$.driverId").doesNotExist());
+
+        verify(evDriverService).getDriverByUserId(4L);
+    }
+
+    @Test
+    void login_ShouldHandleMissingOperatorInfo_WhenOperatorNotFullySetup() throws Exception {
+        // Given
+        User operatorUser = User.builder()
+                .id(5L)
+                .username("newoperator")
+                .email("newoperator@example.com")
+                .userType(User.UserType.STATION_OPERATOR)
+                .build();
+
+        AuthRequest operatorAuthRequest = new AuthRequest();
+        operatorAuthRequest.setUsername("newoperator");
+        operatorAuthRequest.setPassword("password");
+
+        Authentication authentication = mock(Authentication.class);
+        when(authentication.isAuthenticated()).thenReturn(true);
+
+        when(authenticationManager.authenticate(any(Authentication.class)))
+                .thenReturn(authentication);
+        when(jwtService.generateToken("newoperator")).thenReturn("operator-jwt-token");
+        when(userService.getUserByUsername("newoperator")).thenReturn(operatorUser);
+        when(stationOperatorService.getStationOperatorByUserId(5L))
+                .thenThrow(new RuntimeException("Operator not found"));
+
+        // When & Then
+        mockMvc.perform(post("/api/v1/auth/login")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(operatorAuthRequest)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.token").value("operator-jwt-token"))
+                .andExpect(jsonPath("$.username").value("newoperator"))
+                .andExpect(jsonPath("$.userType").value("STATION_OPERATOR"))
+                .andExpect(jsonPath("$.userId").value(5))
+                .andExpect(jsonPath("$.operatorId").doesNotExist())
+                .andExpect(jsonPath("$.stationId").doesNotExist());
+
+        verify(stationOperatorService).getStationOperatorByUserId(5L);
+    }
+
+    @Test
+    void login_ShouldHandleMissingAdminInfo_WhenAdminNotFullySetup() throws Exception {
+        // Given
+        User adminUser = User.builder()
+                .id(6L)
+                .username("newadmin")
+                .email("newadmin@example.com")
+                .userType(User.UserType.ADMIN)
+                .build();
+
+        AuthRequest adminAuthRequest = new AuthRequest();
+        adminAuthRequest.setUsername("newadmin");
+        adminAuthRequest.setPassword("password");
+
+        Authentication authentication = mock(Authentication.class);
+        when(authentication.isAuthenticated()).thenReturn(true);
+
+        when(authenticationManager.authenticate(any(Authentication.class)))
+                .thenReturn(authentication);
+        when(jwtService.generateToken("newadmin")).thenReturn("admin-jwt-token");
+        when(userService.getUserByUsername("newadmin")).thenReturn(adminUser);
+        when(adminService.getAdminByUserId(6L))
+                .thenThrow(new RuntimeException("Admin not found"));
+
+        // When & Then
+        mockMvc.perform(post("/api/v1/auth/login")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(adminAuthRequest)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.token").value("admin-jwt-token"))
+                .andExpect(jsonPath("$.username").value("newadmin"))
+                .andExpect(jsonPath("$.userType").value("ADMIN"))
+                .andExpect(jsonPath("$.userId").value(6))
+                .andExpect(jsonPath("$.adminId").doesNotExist());
+
+        verify(adminService).getAdminByUserId(6L);
+    }
+
+    @Test
+    void login_ShouldReturnOperatorInfo_WhenOperatorHasNoStation() throws Exception {
+        // Given
+        User operatorUser = User.builder()
+                .id(7L)
+                .username("operator_no_station")
+                .email("operator_no_station@example.com")
+                .userType(User.UserType.STATION_OPERATOR)
+                .build();
+
+        StationOperator operator = StationOperator.builder()
+                .id(2L)
+                .user(operatorUser)
+                .station(null) // No station assigned
+                .build();
+
+        AuthRequest operatorAuthRequest = new AuthRequest();
+        operatorAuthRequest.setUsername("operator_no_station");
+        operatorAuthRequest.setPassword("password");
+
+        Authentication authentication = mock(Authentication.class);
+        when(authentication.isAuthenticated()).thenReturn(true);
+
+        when(authenticationManager.authenticate(any(Authentication.class)))
+                .thenReturn(authentication);
+        when(jwtService.generateToken("operator_no_station")).thenReturn("operator-jwt-token");
+        when(userService.getUserByUsername("operator_no_station")).thenReturn(operatorUser);
+        when(stationOperatorService.getStationOperatorByUserId(7L)).thenReturn(operator);
+
+        // When & Then
+        mockMvc.perform(post("/api/v1/auth/login")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(operatorAuthRequest)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.token").value("operator-jwt-token"))
+                .andExpect(jsonPath("$.username").value("operator_no_station"))
+                .andExpect(jsonPath("$.userType").value("STATION_OPERATOR"))
+                .andExpect(jsonPath("$.userId").value(7))
+                .andExpect(jsonPath("$.operatorId").value(2))
+                .andExpect(jsonPath("$.stationId").doesNotExist())
+                .andExpect(jsonPath("$.stationName").doesNotExist());
+
+        verify(stationOperatorService).getStationOperatorByUserId(7L);
+    }
+
+    @Test
     void registerDriver_ShouldCreateDriverAndReturnToken() throws Exception {
         DriverRegistrationRequest request = new DriverRegistrationRequest();
         request.setUser(User.builder()

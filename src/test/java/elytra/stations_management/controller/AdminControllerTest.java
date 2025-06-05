@@ -1,6 +1,7 @@
 package elytra.stations_management.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import elytra.stations_management.dto.AdminRegistrationRequest;
 import elytra.stations_management.models.Admin;
 import elytra.stations_management.models.Station;
 import elytra.stations_management.models.User;
@@ -302,5 +303,139 @@ class AdminControllerTest {
                 .andExpect(status().isForbidden());
 
         verify(adminService, never()).updateAdmin(anyLong(), any());
+    }
+
+    @Test
+    @WithMockUser(roles = "ADMIN")
+    void registerAdmin_ShouldCreateAdmin_WhenValidRequest() throws Exception {
+        // Given
+        AdminRegistrationRequest request = new AdminRegistrationRequest();
+        request.setAdmin(Admin.builder().build());
+        request.setUser(User.builder()
+                .username("newadmin")
+                .password("password123")
+                .email("newadmin@example.com")
+                .firstName("New")
+                .lastName("Admin")
+                .build());
+
+        Admin createdAdmin = Admin.builder()
+                .id(2L)
+                .user(User.builder()
+                        .id(2L)
+                        .username("newadmin")
+                        .email("newadmin@example.com")
+                        .userType(User.UserType.ADMIN)
+                        .build())
+                .build();
+
+        when(adminService.registerAdmin(any(Admin.class), any(User.class)))
+                .thenReturn(createdAdmin);
+
+        // When & Then
+        mockMvc.perform(post("/api/v1/admins")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(2))
+                .andExpect(jsonPath("$.user.username").value("newadmin"))
+                .andExpect(jsonPath("$.user.email").value("newadmin@example.com"))
+                .andExpect(jsonPath("$.user.userType").value("ADMIN"));
+
+        verify(adminService).registerAdmin(any(Admin.class), any(User.class));
+    }
+
+    @Test
+    @WithMockUser(roles = "ADMIN")
+    void registerAdmin_ShouldReturn400_WhenRegistrationFails() throws Exception {
+        // Given
+        AdminRegistrationRequest request = new AdminRegistrationRequest();
+        request.setAdmin(Admin.builder().build());
+        request.setUser(User.builder()
+                .username("existingadmin")
+                .password("password123")
+                .build());
+
+        when(adminService.registerAdmin(any(Admin.class), any(User.class)))
+                .thenThrow(new RuntimeException("Username already exists"));
+
+        // When & Then
+        mockMvc.perform(post("/api/v1/admins")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isBadRequest());
+
+        verify(adminService).registerAdmin(any(Admin.class), any(User.class));
+    }
+
+    @Test
+    @WithMockUser(username = "operator", authorities = "ROLE_STATION_OPERATOR")
+    void registerAdmin_ShouldReturn403_WhenNotAdmin() throws Exception {
+        // Given
+        AdminRegistrationRequest request = new AdminRegistrationRequest();
+        request.setAdmin(Admin.builder().build());
+        request.setUser(User.builder().username("newadmin").build());
+
+        // When & Then
+        mockMvc.perform(post("/api/v1/admins")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isForbidden());
+
+        verify(adminService, never()).registerAdmin(any(), any());
+    }
+
+    @Test
+    void registerAdmin_ShouldReturn403_WhenNotAuthenticated() throws Exception {
+        // Given
+        AdminRegistrationRequest request = new AdminRegistrationRequest();
+        request.setAdmin(Admin.builder().build());
+        request.setUser(User.builder().username("newadmin").build());
+
+        // When & Then
+        mockMvc.perform(post("/api/v1/admins")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(request)))
+                .andExpect(status().isForbidden());
+
+        verify(adminService, never()).registerAdmin(any(), any());
+    }
+
+    @Test
+    @WithMockUser(roles = "ADMIN")
+    void removeStationFromAdmin_ShouldReturn400_WhenRemovalFails() throws Exception {
+        // Given
+        when(adminService.removeStationFromAdmin(1L, 99L))
+                .thenThrow(new RuntimeException("Station not assigned to this admin"));
+
+        // When & Then
+        mockMvc.perform(delete("/api/v1/admins/1/stations/99"))
+                .andExpect(status().isBadRequest());
+
+        verify(adminService).removeStationFromAdmin(1L, 99L);
+    }
+
+    @Test
+    @WithMockUser(roles = "ADMIN")
+    void getAdminByUserId_ShouldReturn404_WhenNotFound() throws Exception {
+        // Given
+        when(adminService.getAdminByUserId(99L))
+                .thenThrow(new RuntimeException("Admin not found for user"));
+
+        // When & Then
+        mockMvc.perform(get("/api/v1/admins/user/99"))
+                .andExpect(status().isNotFound());
+
+        verify(adminService).getAdminByUserId(99L);
+    }
+
+    @Test
+    @WithMockUser(username = "operator", authorities = "ROLE_STATION_OPERATOR")
+    void getAdminByUserId_ShouldReturn403_WhenNotAdmin() throws Exception {
+        // When & Then
+        mockMvc.perform(get("/api/v1/admins/user/1"))
+                .andExpect(status().isForbidden());
+
+        verify(adminService, never()).getAdminByUserId(anyLong());
     }
 }
