@@ -65,4 +65,9 @@ public class UserService implements UserDetailsService {
     public List<User> getAllUsers() {
         return repository.findAll();
     }
+    
+    public User getUserByUsername(String username) {
+        return repository.findByUsername(username)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found: " + username));
+    }
 } 
