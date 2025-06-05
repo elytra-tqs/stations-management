@@ -156,37 +156,6 @@ class UserControllerTest {
     }
 
     @Test
-    void login_ShouldReturnTokenAndUsername_WhenValidCredentials() throws Exception {
-        Authentication authentication = mock(Authentication.class);
-        when(authentication.isAuthenticated()).thenReturn(true);
-        
-        when(authenticationManager.authenticate(any(Authentication.class)))
-                .thenReturn(authentication);
-        when(jwtService.generateToken("testuser")).thenReturn("test-jwt-token-12345");
-
-        mockMvc.perform(post("/api/v1/auth/login")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(authRequest)))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.token").value("test-jwt-token-12345"))
-                .andExpect(jsonPath("$.username").value("testuser"));
-
-        verify(authenticationManager).authenticate(any(Authentication.class));
-        verify(jwtService).generateToken("testuser");
-    }
-
-    @Test
-    void login_ShouldReturn401_WhenInvalidCredentials() throws Exception {
-        when(authenticationManager.authenticate(any(Authentication.class)))
-                .thenThrow(new BadCredentialsException("Invalid credentials"));
-
-        mockMvc.perform(post("/api/v1/auth/login")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(authRequest)))
-                .andExpect(status().isUnauthorized());
-    }
-
-    @Test
     void generateToken_ShouldReturn401_WhenAuthenticationNotAuthenticated() throws Exception {
         Authentication authentication = mock(Authentication.class);
         when(authentication.isAuthenticated()).thenReturn(false);
@@ -195,22 +164,6 @@ class UserControllerTest {
                 .thenReturn(authentication);
 
         mockMvc.perform(post("/api/v1/auth/generateToken")
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(authRequest)))
-                .andExpect(status().isUnauthorized());
-
-        verify(authenticationManager).authenticate(any(Authentication.class));
-    }
-
-    @Test
-    void login_ShouldReturn401_WhenAuthenticationNotAuthenticated() throws Exception {
-        Authentication authentication = mock(Authentication.class);
-        when(authentication.isAuthenticated()).thenReturn(false);
-        
-        when(authenticationManager.authenticate(any(Authentication.class)))
-                .thenReturn(authentication);
-
-        mockMvc.perform(post("/api/v1/auth/login")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(authRequest)))
                 .andExpect(status().isUnauthorized());

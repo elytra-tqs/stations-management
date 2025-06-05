@@ -55,21 +55,4 @@ public class UserController {
         return userService.getAllUsers();
     }
 
-    @PostMapping("/login")
-    public Map<String, String> login(@RequestBody AuthRequest authRequest) {
-        try {
-            Authentication authentication = authenticationManager.authenticate(
-                    new UsernamePasswordAuthenticationToken(authRequest.getUsername(), authRequest.getPassword())
-            );
-            if (authentication.isAuthenticated()) {
-                String token = jwtService.generateToken(authRequest.getUsername());
-                return Map.of("token", token, "username", authRequest.getUsername());
-            }
-        } catch (Exception e) {
-            // Don't reveal if username exists or not - always return generic message
-            throw new BadCredentialsException("Invalid credentials");
-        }
-        // This line should never be reached, but just in case
-        throw new BadCredentialsException("Invalid credentials");
-    }
 }
