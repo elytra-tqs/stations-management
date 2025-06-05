@@ -478,7 +478,8 @@ class AuthControllerTest {
     }
 
     @Test
-    void registerOperator_ShouldReturn403_WhenNotAdmin() throws Exception {
+    void registerOperator_ShouldCreateOperator_WhenPublic() throws Exception {
+        // Given
         OperatorRegistrationRequest request = new OperatorRegistrationRequest();
         request.setUser(User.builder()
                 .username("newoperator")
@@ -488,12 +489,22 @@ class AuthControllerTest {
                 .lastName("Operator")
                 .build());
         request.setOperator(StationOperator.builder().build());
-        request.setStationId(1L);
+        request.setStationId(null);  // No station initially
 
+        when(stationOperatorService.registerStationOperator(
+                any(StationOperator.class), any(User.class), isNull()))
+                .thenReturn(testOperator);
+        when(jwtService.generateToken("newoperator")).thenReturn("operator-jwt-token");
+
+        // When & Then
         mockMvc.perform(post("/api/v1/auth/register/operator")
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isForbidden());
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.token").value("operator-jwt-token"))
+                .andExpect(jsonPath("$.message").value("Station operator registered successfully"))
+                .andExpect(jsonPath("$.username").value("testuser"))
+                .andExpect(jsonPath("$.userType").value("STATION_OPERATOR"));
     }
 
     @Test
