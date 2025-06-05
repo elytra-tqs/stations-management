@@ -7,6 +7,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -37,10 +38,11 @@ public class Station {
 
     @JsonManagedReference
     @OneToMany(mappedBy = "station", cascade = CascadeType.ALL, orphanRemoval = true)
+    @Builder.Default
     private List<Charger> chargers = new ArrayList<>();
 
     @OneToOne(mappedBy = "station")
-    @JsonManagedReference
+    @JsonIgnore
     private StationOperator stationOperator;
 
     @ManyToOne

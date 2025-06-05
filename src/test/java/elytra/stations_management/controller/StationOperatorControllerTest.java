@@ -18,7 +18,6 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 
 import static org.hamcrest.Matchers.*;
 import static org.mockito.ArgumentMatchers.*;
@@ -472,13 +471,12 @@ class StationOperatorControllerTest {
     }
 
     @Test
-    @WithMockUser(username = "driver", authorities = "ROLE_EV_DRIVER")
+    @WithMockUser(username = "driver", roles = "EV_DRIVER")
     void getAllStationOperators_ShouldReturn403_WhenNotAuthorized() throws Exception {
-        // When & Then
         mockMvc.perform(get("/api/v1/station-operators"))
                 .andExpect(status().isForbidden());
 
-        verify(stationOperatorService, never()).getAllStationOperators();
+        verify(stationOperatorService, times(0)).getAllStationOperators();
     }
 
     @Test

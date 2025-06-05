@@ -1,5 +1,6 @@
 package elytra.stations_management.services;
 
+import elytra.stations_management.exception.AdminException;
 import elytra.stations_management.models.Admin;
 import elytra.stations_management.models.Station;
 import elytra.stations_management.models.User;
@@ -22,7 +23,7 @@ public class AdminService {
     @Transactional
     public Admin registerAdmin(Admin admin, User user) {
         if (adminRepository.existsByUserId(user.getId())) {
-            throw new RuntimeException("User is already an admin");
+            throw new AdminException("User is already an admin");
         }
 
         user.setUserType(User.UserType.ADMIN);
@@ -58,7 +59,7 @@ public class AdminService {
                 .orElseThrow(() -> new RuntimeException("Station not found"));
 
         if (station.getAdmin() != null && !station.getAdmin().getId().equals(adminId)) {
-            throw new RuntimeException("Station is already assigned to another admin");
+            throw new AdminException("Station is already assigned to another admin");
         }
 
         if (!admin.getStations().contains(station)) {
@@ -77,7 +78,7 @@ public class AdminService {
                 .orElseThrow(() -> new RuntimeException("Station not found"));
 
         if (station.getAdmin() == null || !station.getAdmin().getId().equals(adminId)) {
-            throw new RuntimeException("Station does not belong to this admin");
+            throw new AdminException("Station does not belong to this admin");
         }
 
         admin.getStations().remove(station);
