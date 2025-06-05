@@ -1,0 +1,43 @@
+FROM maven:3.9.9-eclipse-temurin-21 AS dependencies
+
+WORKDIR /app
+
+COPY pom.xml .
+RUN mvn dependency:go-offline -B && \
+    mvn dependency:sources -B && \
+    mvn dependency:resolve -Dclassifier=javadoc -B
+
+FROM maven:3.9.9-eclipse-temurin-21 AS source
+
+WORKDIR /app
+
+COPY --from=dependencies /root/.m2 /root/.m2
+COPY pom.xml .
+COPY src ./src
+
+FROM source AS build
+
+RUN mvn clean package -DskipTests
+
+FROM eclipse-temurin:21-jre-alpine AS runtime-base
+
+RUN apk add --no-cache wget && \
+    addgroup -g 1001 -S appgroup && \
+    adduser -S appuser -u 1001 -G appgroup
+
+WORKDIR /app
+
+FROM runtime-base AS production
+
+COPY --from=build /app/target/*.jar app.jar
+
+RUN chown -R appuser:appgroup /app
+
+USER appuser
+
+EXPOSE 8080
+
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+  CMD wget --no-verbose --tries=1 --spider http://localhost:8080/actuator/health || exit 1
+
+CMD ["java", "-jar", "app.jar"] 
