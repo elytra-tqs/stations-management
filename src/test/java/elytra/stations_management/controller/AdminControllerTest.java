@@ -386,7 +386,7 @@ class AdminControllerTest {
     }
 
     @Test
-    void registerAdmin_ShouldReturn401_WhenNotAuthenticated() throws Exception {
+    void registerAdmin_ShouldReturn403_WhenNotAuthenticated() throws Exception {
         // Given
         AdminRegistrationRequest request = new AdminRegistrationRequest();
         request.setAdmin(Admin.builder().build());
@@ -396,7 +396,7 @@ class AdminControllerTest {
         mockMvc.perform(post("/api/v1/admins")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(request)))
-                .andExpect(status().isUnauthorized());
+                .andExpect(status().isForbidden());
 
         verify(adminService, never()).registerAdmin(any(), any());
     }

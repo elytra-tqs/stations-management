@@ -15,6 +15,8 @@ import java.util.Objects;
 @Service
 @RequiredArgsConstructor
 public class StationOperatorService {
+    private static final String STATION_NOT_FOUND = "Station not found";
+
     private final StationOperatorRepository stationOperatorRepository;
     private final StationRepository stationRepository;
     private final UserService userService;
@@ -32,17 +34,17 @@ public class StationOperatorService {
 
         // Create the station operator
         stationOperator.setUser(savedUser);
-        
+
         // If stationId is provided, assign the station
         if (stationId != null) {
             // Check if station already has an operator
             if (stationOperatorRepository.existsByStationId(stationId)) {
                 throw new StationOperatorException("Station already has an operator assigned");
             }
-            
+
             // Get the station
             Station station = stationRepository.findById(stationId)
-                    .orElseThrow(() -> new RuntimeException("Station not found"));
+                    .orElseThrow(() -> new RuntimeException(STATION_NOT_FOUND));
             stationOperator.setStation(station);
         }
 
@@ -75,27 +77,27 @@ public class StationOperatorService {
     @Transactional
     public StationOperator updateStationOperator(Long id, StationOperator updatedStationOperator) {
         StationOperator existingOperator = getStationOperatorById(id);
-        
+
         // Update user information
         if (updatedStationOperator.getUser() != null) {
             User updatedUser = userService.updateUser(
-                existingOperator.getUser().getId(), 
-                updatedStationOperator.getUser()
+                    existingOperator.getUser().getId(),
+                    updatedStationOperator.getUser()
             );
             existingOperator.setUser(updatedUser);
         }
 
         // Update station assignment if provided
-        if (updatedStationOperator.getStation() != null && 
-            !updatedStationOperator.getStation().getId().equals(existingOperator.getStation().getId())) {
-            
+        if (updatedStationOperator.getStation() != null &&
+                !updatedStationOperator.getStation().getId().equals(existingOperator.getStation().getId())) {
+
             // Check if new station already has an operator
             if (stationOperatorRepository.existsByStationId(updatedStationOperator.getStation().getId())) {
                 throw new StationOperatorException("Target station already has an operator assigned");
             }
-            
+
             Station newStation = stationRepository.findById(updatedStationOperator.getStation().getId())
-                    .orElseThrow(() -> new RuntimeException("Station not found"));
+                    .orElseThrow(() -> new RuntimeException(STATION_NOT_FOUND));
             existingOperator.setStation(newStation);
         }
 
@@ -111,35 +113,35 @@ public class StationOperatorService {
     @Transactional
     public StationOperator claimStation(Long operatorId, Long stationId) {
         StationOperator operator = getStationOperatorById(operatorId);
-        
+
         // Check if operator already has a station
         if (operator.getStation() != null) {
             throw new StationOperatorException("Operator already manages a station");
         }
-        
+
         // Check if station already has an operator
         if (stationOperatorRepository.existsByStationId(stationId)) {
             throw new StationOperatorException("Station already has an operator assigned");
         }
-        
+
         // Get the station
         Station station = stationRepository.findById(stationId)
-                .orElseThrow(() -> new RuntimeException("Station not found"));
-        
+                .orElseThrow(() -> new RuntimeException(STATION_NOT_FOUND));
+
         // Assign the station to the operator
         operator.setStation(station);
-        
+
         return stationOperatorRepository.save(operator);
     }
 
     @Transactional
     public StationOperator releaseStation(Long operatorId) {
         StationOperator operator = getStationOperatorById(operatorId);
-        
+
         if (operator.getStation() == null) {
             throw new StationOperatorException("Operator doesn't manage any station");
         }
-        
+
         operator.setStation(null);
         return stationOperatorRepository.save(operator);
     }
@@ -151,11 +153,11 @@ public class StationOperatorService {
                 .map(op -> op.getStation() != null ? op.getStation().getId() : null)
                 .filter(Objects::nonNull)
                 .toList();
-        
+
         if (stationsWithOperators.isEmpty()) {
             return stationRepository.findAll();
         }
-        
+
         return stationRepository.findAll().stream()
                 .filter(station -> !stationsWithOperators.contains(station.getId()))
                 .toList();

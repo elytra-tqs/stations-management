@@ -24,6 +24,5 @@ public class StationOperator {
 
     @OneToOne
     @JoinColumn(name = "station_id", nullable = true)
-    @JsonBackReference
     private Station station;
 }
