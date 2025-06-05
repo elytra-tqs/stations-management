@@ -33,6 +33,15 @@ public class EVDriverController {
         }
     }
 
+    @GetMapping("/user/{userId}")
+    public ResponseEntity<EVDriver> getDriverByUserId(@PathVariable Long userId) {
+        try {
+            return ResponseEntity.ok(evDriverService.getDriverByUserId(userId));
+        } catch (RuntimeException e) {
+            return ResponseEntity.notFound().build();
+        }
+    }
+
     @GetMapping
     public ResponseEntity<List<EVDriver>> getAllDrivers() {
         return ResponseEntity.ok(evDriverService.getAllDrivers());
