@@ -2,6 +2,7 @@ package elytra.stations_management.exception;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -68,6 +69,13 @@ public class GlobalExceptionHandler {
         Map<String, String> error = new HashMap<>();
         error.put(ERROR_KEY, "Authentication failed");
         return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(error);
+    }
+
+    @ExceptionHandler(AccessDeniedException.class)
+    public ResponseEntity<Map<String, String>> handleAccessDenied(AccessDeniedException e) {
+        Map<String, String> error = new HashMap<>();
+        error.put(ERROR_KEY, "Access denied");
+        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(error);
     }
 
     @ExceptionHandler(HttpMessageNotReadableException.class)
