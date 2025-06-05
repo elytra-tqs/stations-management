@@ -4,7 +4,7 @@ WORKDIR /app
 
 COPY pom.xml .
 RUN mvn dependency:go-offline -B && \
-    mvn dependency:resolve-sources -B && \
+    mvn dependency:sources -B && \
     mvn dependency:resolve -Dclassifier=javadoc -B
 
 FROM maven:3.9.9-eclipse-temurin-21 AS source
