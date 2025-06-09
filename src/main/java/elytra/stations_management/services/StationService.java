@@ -8,12 +8,17 @@ import org.springframework.transaction.annotation.Transactional;
 
 import elytra.stations_management.models.Charger;
 import elytra.stations_management.models.Station;
+import elytra.stations_management.models.StationOperator;
 import elytra.stations_management.repositories.StationRepository;
+import elytra.stations_management.repositories.StationOperatorRepository;
 
 @Service
 public class StationService {
     @Autowired
     private StationRepository stationRepository;
+    
+    @Autowired
+    private StationOperatorRepository stationOperatorRepository;
 
     @Transactional
     public Station registerStation(Station station) {
@@ -26,12 +31,16 @@ public class StationService {
     }
 
     public List<Station> getAllStations() {
-        return stationRepository.findAll();
+        List<Station> stations = stationRepository.findAll();
+        stations.forEach(this::populateOperatorUsername);
+        return stations;
     }
 
     public Station getStationById(Long stationId) {
-        return stationRepository.findById(stationId)
+        Station station = stationRepository.findById(stationId)
                 .orElseThrow(() -> new RuntimeException("Station not found"));
+        populateOperatorUsername(station);
+        return station;
     }
 
     @Transactional
@@ -70,5 +79,14 @@ public class StationService {
         Station station = stationRepository.findById(stationId)
                 .orElseThrow(() -> new RuntimeException("Station not found"));
         stationRepository.delete(station);
+    }
+    
+    private void populateOperatorUsername(Station station) {
+        stationOperatorRepository.findByStationId(station.getId())
+                .ifPresent(operator -> {
+                    if (operator.getUser() != null) {
+                        station.setOperatorUsername(operator.getUser().getUsername());
+                    }
+                });
     }
 }

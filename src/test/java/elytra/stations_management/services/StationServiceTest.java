@@ -15,15 +15,20 @@ import org.mockito.Mock;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.any;
 import org.mockito.MockitoAnnotations;
 
 import elytra.stations_management.models.Charger;
 import elytra.stations_management.models.Station;
 import elytra.stations_management.repositories.StationRepository;
+import elytra.stations_management.repositories.StationOperatorRepository;
 
 class StationServiceTest {
     @Mock
     private StationRepository stationRepository;
+    
+    @Mock
+    private StationOperatorRepository stationOperatorRepository;
 
     @InjectMocks
     private StationService stationService;
@@ -32,6 +37,8 @@ class StationServiceTest {
     void setUp() {
         MockitoAnnotations.openMocks(this);
         stationRepository.deleteAll();
+        // Default behavior for stationOperatorRepository
+        when(stationOperatorRepository.findByStationId(any())).thenReturn(java.util.Optional.empty());
     }
 
     @Test
