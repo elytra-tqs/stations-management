@@ -9,9 +9,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import elytra.stations_management.models.Booking;
+import elytra.stations_management.models.Car;
 import elytra.stations_management.models.Charger;
 import elytra.stations_management.models.User;
 import elytra.stations_management.repositories.BookingRepository;
+import elytra.stations_management.repositories.CarRepository;
 import elytra.stations_management.repositories.ChargerRepository;
 import elytra.stations_management.repositories.UserRepository;
 import elytra.stations_management.dto.BookingRequest;
@@ -22,12 +24,15 @@ public class BookingService {
     private final BookingRepository bookingRepository;
     private final ChargerService chargerService;
     private final UserRepository userRepository;
+    private final CarRepository carRepository;
     private final BookingService self;
 
-    public BookingService(BookingRepository bookingRepository, ChargerService chargerService, UserRepository userRepository, @Lazy BookingService self) {
+    public BookingService(BookingRepository bookingRepository, ChargerService chargerService, 
+                         UserRepository userRepository, CarRepository carRepository, @Lazy BookingService self) {
         this.bookingRepository = bookingRepository;
         this.chargerService = chargerService;
         this.userRepository = userRepository;
+        this.carRepository = carRepository;
         this.self = self;
     }
 
@@ -40,8 +45,23 @@ public class BookingService {
         User user = userRepository.findById(bookingRequest.getUserId())
             .orElseThrow(() -> new InvalidBookingException("User not found"));
             
+        // Fetch car
+        Car car = carRepository.findById(bookingRequest.getCarId())
+            .orElseThrow(() -> new InvalidBookingException("Car not found"));
+            
+        // Verify car belongs to the user
+        if (!car.getEvDriver().getUser().getId().equals(user.getId())) {
+            throw new InvalidBookingException("Car does not belong to the user");
+        }
+            
         // Fetch charger
         Charger charger = chargerService.getChargerById(bookingRequest.getChargerId());
+        
+        // Check charger type compatibility
+        if (!car.getChargerType().equals(charger.getType())) {
+            throw new InvalidBookingException("Car charger type (" + car.getChargerType() + 
+                ") is not compatible with charger type (" + charger.getType() + ")");
+        }
         
         // Check if charger is available
         if (charger.getStatus() != Charger.Status.AVAILABLE) {
@@ -65,6 +85,7 @@ public class BookingService {
             .endTime(bookingRequest.getEndTime())
             .user(user)
             .charger(charger)
+            .car(car)
             .status(Booking.Status.PENDING)
             .build();
 
@@ -134,6 +155,9 @@ public class BookingService {
         }
         if (bookingRequest.getChargerId() == null) {
             throw new InvalidBookingException("Charger ID is required");
+        }
+        if (bookingRequest.getCarId() == null) {
+            throw new InvalidBookingException("Car ID is required");
         }
         if (bookingRequest.getStartTime().isBefore(LocalDateTime.now())) {
             throw new InvalidBookingException("Cannot create booking in the past");
