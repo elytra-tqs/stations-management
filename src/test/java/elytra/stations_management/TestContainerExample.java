@@ -12,7 +12,10 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @SpringBootTest
 @ActiveProfiles("mysql-test")
-@ContextConfiguration(classes = TestContainerConfig.class)
+@ContextConfiguration(
+    classes = TestContainerConfig.class,
+    initializers = TestContainerConfig.Initializer.class
+)
 class TestContainerExample {
 
     @Autowired
