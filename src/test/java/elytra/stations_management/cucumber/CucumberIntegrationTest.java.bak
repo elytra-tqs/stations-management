@@ -1,0 +1,19 @@
+package elytra.stations_management.cucumber;
+
+import io.cucumber.junit.Cucumber;
+import io.cucumber.junit.CucumberOptions;
+import org.junit.runner.RunWith;
+
+@RunWith(Cucumber.class)
+@CucumberOptions(
+    features = "classpath:features",
+    glue = "elytra.stations_management.cucumber",
+    plugin = {
+        "pretty",
+        "html:target/cucumber-reports",
+        "json:target/cucumber-reports/cucumber.json",
+        "junit:target/cucumber-reports/cucumber.xml"
+    }
+)
+public class CucumberIntegrationTest {
+}
