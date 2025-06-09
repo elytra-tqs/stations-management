@@ -10,7 +10,7 @@ import static io.cucumber.junit.platform.engine.Constants.*;
 @Suite
 @IncludeEngines("cucumber")
 @SelectClasspathResource("features")
-@ConfigurationParameter(key = PLUGIN_PROPERTY_NAME, value = "pretty, html:target/cucumber-reports, json:target/cucumber-reports/cucumber.json")
+@ConfigurationParameter(key = PLUGIN_PROPERTY_NAME, value = "pretty, html:target/cucumber-reports/cucumber.html, json:target/cucumber-reports/cucumber.json")
 @ConfigurationParameter(key = GLUE_PROPERTY_NAME, value = "elytra.stations_management.cucumber.steps,elytra.stations_management.cucumber")
 @ConfigurationParameter(key = FEATURES_PROPERTY_NAME, value = "classpath:features")
 public class CucumberTest {

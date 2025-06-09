@@ -13,7 +13,7 @@ public class RunCucumberFeatureTest {
             "--glue", "elytra.stations_management.cucumber.steps",
             "--glue", "elytra.stations_management.cucumber",
             "--plugin", "pretty",
-            "--plugin", "html:target/cucumber-html-reports",
+            "--plugin", "html:target/cucumber-html-reports/report.html",
             "--plugin", "json:target/cucumber-json-reports/cucumber.json",
             "classpath:features"
         };
