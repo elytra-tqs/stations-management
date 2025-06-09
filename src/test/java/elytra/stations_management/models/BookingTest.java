@@ -18,6 +18,16 @@ class BookingTest {
                 .build();
     }
 
+    private Car createTestCar(Long id) {
+        return Car.builder()
+                .id(id)
+                .model("Tesla Model 3")
+                .licensePlate("TEST" + id)
+                .batteryCapacity(75.0)
+                .chargerType("Type 2")
+                .build();
+    }
+
     @Test
     void testNoArgsConstructor() {
         Booking booking = new Booking();
@@ -30,7 +40,8 @@ class BookingTest {
         LocalDateTime endTime = startTime.plusHours(1);
         Charger charger = new Charger();
         User user = createTestUser(123L, "user123");
-        Booking booking = new Booking(1L, startTime, endTime, user, charger, Booking.Status.PENDING);
+        Car car = createTestCar(1L);
+        Booking booking = new Booking(1L, startTime, endTime, user, charger, car, Booking.Status.PENDING);
         assertEquals(1L, booking.getId());
         assertEquals(startTime, booking.getStartTime());
         assertEquals(endTime, booking.getEndTime());
@@ -51,6 +62,7 @@ class BookingTest {
                 .endTime(endTime)
                 .user(user)
                 .charger(charger)
+                .car(createTestCar(2L))
                 .status(Booking.Status.CONFIRMED)
                 .build();
         assertEquals(2L, booking.getId());
@@ -74,6 +86,7 @@ class BookingTest {
         booking.setEndTime(endTime);
         booking.setUser(user);
         booking.setCharger(charger);
+        booking.setCar(createTestCar(3L));
         booking.setStatus(Booking.Status.COMPLETED);
 
         assertEquals(3L, booking.getId());
@@ -81,6 +94,7 @@ class BookingTest {
         assertEquals(endTime, booking.getEndTime());
         assertEquals(789L, booking.getUser().getId());
         assertEquals(charger, booking.getCharger());
+        assertNotNull(booking.getCar());
         assertEquals(Booking.Status.COMPLETED, booking.getStatus());
     }
 
@@ -98,7 +112,7 @@ class BookingTest {
         LocalDateTime endTime = startTime.plusHours(1);
         Charger charger = Charger.builder().id(1L).build();
         User user = createTestUser(1L, "userA");
-        Booking booking1 = Booking.builder().id(1L).startTime(startTime).endTime(endTime).user(user).charger(charger).status(Booking.Status.PENDING).build();
+        Booking booking1 = Booking.builder().id(1L).startTime(startTime).endTime(endTime).user(user).charger(charger).car(createTestCar(1L)).status(Booking.Status.PENDING).build();
         assertEquals(booking1, booking1);
     }
 
@@ -110,8 +124,8 @@ class BookingTest {
         Charger charger2 = Charger.builder().id(1L).build();
         User user = createTestUser(1L, "userA");
 
-        Booking booking1 = Booking.builder().id(1L).startTime(startTime).endTime(endTime).user(user).charger(charger1).status(Booking.Status.PENDING).build();
-        Booking booking2 = Booking.builder().id(1L).startTime(startTime).endTime(endTime).user(user).charger(charger2).status(Booking.Status.PENDING).build();
+        Booking booking1 = Booking.builder().id(1L).startTime(startTime).endTime(endTime).user(user).charger(charger1).car(createTestCar(1L)).status(Booking.Status.PENDING).build();
+        Booking booking2 = Booking.builder().id(1L).startTime(startTime).endTime(endTime).user(user).charger(charger2).car(createTestCar(1L)).status(Booking.Status.PENDING).build();
 
         assertEquals(booking1, booking2);
     }
@@ -123,8 +137,8 @@ class BookingTest {
         Charger charger1 = Charger.builder().id(1L).build();
         User user = createTestUser(1L, "userA");
 
-        Booking booking1 = Booking.builder().id(1L).startTime(startTime).endTime(endTime).user(user).charger(charger1).status(Booking.Status.PENDING).build();
-        Booking booking2 = Booking.builder().id(2L).startTime(startTime).endTime(endTime).user(user).charger(charger1).status(Booking.Status.PENDING).build();
+        Booking booking1 = Booking.builder().id(1L).startTime(startTime).endTime(endTime).user(user).charger(charger1).car(createTestCar(1L)).status(Booking.Status.PENDING).build();
+        Booking booking2 = Booking.builder().id(2L).startTime(startTime).endTime(endTime).user(user).charger(charger1).car(createTestCar(1L)).status(Booking.Status.PENDING).build();
 
         assertNotEquals(booking1, booking2);
     }
@@ -137,8 +151,8 @@ class BookingTest {
         User userA = createTestUser(1L, "userA");
         User userB = createTestUser(2L, "userB");
 
-        Booking booking1 = Booking.builder().id(1L).startTime(startTime).endTime(endTime).user(userA).charger(charger).status(Booking.Status.PENDING).build();
-        Booking booking2 = Booking.builder().id(1L).startTime(startTime).endTime(endTime).user(userB).charger(charger).status(Booking.Status.PENDING).build();
+        Booking booking1 = Booking.builder().id(1L).startTime(startTime).endTime(endTime).user(userA).charger(charger).car(createTestCar(1L)).status(Booking.Status.PENDING).build();
+        Booking booking2 = Booking.builder().id(1L).startTime(startTime).endTime(endTime).user(userB).charger(charger).car(createTestCar(1L)).status(Booking.Status.PENDING).build();
 
         assertNotEquals(booking1, booking2);
     }
@@ -164,37 +178,37 @@ class BookingTest {
         User user = createTestUser(1L, "userA");
 
         // Test with null user
-        Booking booking1 = Booking.builder().id(1L).startTime(startTime).endTime(endTime).user(null).charger(charger1).status(Booking.Status.PENDING).build();
-        Booking booking2 = Booking.builder().id(1L).startTime(startTime).endTime(endTime).user(null).charger(charger2).status(Booking.Status.PENDING).build();
-        Booking booking3 = Booking.builder().id(1L).startTime(startTime).endTime(endTime).user(user).charger(charger1).status(Booking.Status.PENDING).build();
+        Booking booking1 = Booking.builder().id(1L).startTime(startTime).endTime(endTime).user(null).charger(charger1).car(createTestCar(1L)).status(Booking.Status.PENDING).build();
+        Booking booking2 = Booking.builder().id(1L).startTime(startTime).endTime(endTime).user(null).charger(charger2).car(createTestCar(1L)).status(Booking.Status.PENDING).build();
+        Booking booking3 = Booking.builder().id(1L).startTime(startTime).endTime(endTime).user(user).charger(charger1).car(createTestCar(1L)).status(Booking.Status.PENDING).build();
         assertEquals(booking1, booking2);
         assertNotEquals(booking1, booking3);
 
         // Test with null startTime
-        Booking booking4 = Booking.builder().id(1L).startTime(null).endTime(endTime).user(user).charger(charger1).status(Booking.Status.PENDING).build();
-        Booking booking5 = Booking.builder().id(1L).startTime(null).endTime(endTime).user(user).charger(charger2).status(Booking.Status.PENDING).build();
-        Booking booking6 = Booking.builder().id(1L).startTime(startTime).endTime(endTime).user(user).charger(charger1).status(Booking.Status.PENDING).build();
+        Booking booking4 = Booking.builder().id(1L).startTime(null).endTime(endTime).user(user).charger(charger1).car(createTestCar(1L)).status(Booking.Status.PENDING).build();
+        Booking booking5 = Booking.builder().id(1L).startTime(null).endTime(endTime).user(user).charger(charger2).car(createTestCar(1L)).status(Booking.Status.PENDING).build();
+        Booking booking6 = Booking.builder().id(1L).startTime(startTime).endTime(endTime).user(user).charger(charger1).car(createTestCar(1L)).status(Booking.Status.PENDING).build();
         assertEquals(booking4, booking5);
         assertNotEquals(booking4, booking6);
 
         // Test with null endTime
-        Booking booking7 = Booking.builder().id(1L).startTime(startTime).endTime(null).user(user).charger(charger1).status(Booking.Status.PENDING).build();
-        Booking booking8 = Booking.builder().id(1L).startTime(startTime).endTime(null).user(user).charger(charger2).status(Booking.Status.PENDING).build();
-        Booking booking9 = Booking.builder().id(1L).startTime(startTime).endTime(endTime).user(user).charger(charger1).status(Booking.Status.PENDING).build();
+        Booking booking7 = Booking.builder().id(1L).startTime(startTime).endTime(null).user(user).charger(charger1).car(createTestCar(1L)).status(Booking.Status.PENDING).build();
+        Booking booking8 = Booking.builder().id(1L).startTime(startTime).endTime(null).user(user).charger(charger2).car(createTestCar(1L)).status(Booking.Status.PENDING).build();
+        Booking booking9 = Booking.builder().id(1L).startTime(startTime).endTime(endTime).user(user).charger(charger1).car(createTestCar(1L)).status(Booking.Status.PENDING).build();
         assertEquals(booking7, booking8);
         assertNotEquals(booking7, booking9);
 
         // Test with null charger
-        Booking booking10 = Booking.builder().id(1L).startTime(startTime).endTime(endTime).user(user).charger(null).status(Booking.Status.PENDING).build();
-        Booking booking11 = Booking.builder().id(1L).startTime(startTime).endTime(endTime).user(user).charger(null).status(Booking.Status.PENDING).build();
-        Booking booking12 = Booking.builder().id(1L).startTime(startTime).endTime(endTime).user(user).charger(charger1).status(Booking.Status.PENDING).build();
+        Booking booking10 = Booking.builder().id(1L).startTime(startTime).endTime(endTime).user(user).charger(null).car(createTestCar(1L)).status(Booking.Status.PENDING).build();
+        Booking booking11 = Booking.builder().id(1L).startTime(startTime).endTime(endTime).user(user).charger(null).car(createTestCar(1L)).status(Booking.Status.PENDING).build();
+        Booking booking12 = Booking.builder().id(1L).startTime(startTime).endTime(endTime).user(user).charger(charger1).car(createTestCar(1L)).status(Booking.Status.PENDING).build();
         assertEquals(booking10, booking11);
         assertNotEquals(booking10, booking12);
 
         // Test with null status
-        Booking booking13 = Booking.builder().id(1L).startTime(startTime).endTime(endTime).user(user).charger(charger1).status(null).build();
-        Booking booking14 = Booking.builder().id(1L).startTime(startTime).endTime(endTime).user(user).charger(charger2).status(null).build();
-        Booking booking15 = Booking.builder().id(1L).startTime(startTime).endTime(endTime).user(user).charger(charger1).status(Booking.Status.PENDING).build();
+        Booking booking13 = Booking.builder().id(1L).startTime(startTime).endTime(endTime).user(user).charger(charger1).car(createTestCar(1L)).status(null).build();
+        Booking booking14 = Booking.builder().id(1L).startTime(startTime).endTime(endTime).user(user).charger(charger2).car(createTestCar(1L)).status(null).build();
+        Booking booking15 = Booking.builder().id(1L).startTime(startTime).endTime(endTime).user(user).charger(charger1).car(createTestCar(1L)).status(Booking.Status.PENDING).build();
         assertEquals(booking13, booking14);
         assertNotEquals(booking13, booking15);
     }
@@ -207,8 +221,8 @@ class BookingTest {
         Charger charger2 = Charger.builder().id(1L).build();
         User user = createTestUser(1L, "userA");
 
-        Booking booking1 = Booking.builder().id(1L).startTime(startTime).endTime(endTime).user(user).charger(charger1).status(Booking.Status.PENDING).build();
-        Booking booking2 = Booking.builder().id(1L).startTime(startTime).endTime(endTime).user(user).charger(charger2).status(Booking.Status.PENDING).build();
+        Booking booking1 = Booking.builder().id(1L).startTime(startTime).endTime(endTime).user(user).charger(charger1).car(createTestCar(1L)).status(Booking.Status.PENDING).build();
+        Booking booking2 = Booking.builder().id(1L).startTime(startTime).endTime(endTime).user(user).charger(charger2).car(createTestCar(1L)).status(Booking.Status.PENDING).build();
         assertEquals(booking1.hashCode(), booking2.hashCode());
     }
 
@@ -226,7 +240,7 @@ class BookingTest {
         Charger charger = new Charger();
         charger.setId(1L);
         User user = createTestUser(1L, "userA");
-        Booking booking = Booking.builder().id(1L).startTime(startTime).endTime(endTime).user(user).charger(charger).status(Booking.Status.PENDING).build();
+        Booking booking = Booking.builder().id(1L).startTime(startTime).endTime(endTime).user(user).charger(charger).car(createTestCar(1L)).status(Booking.Status.PENDING).build();
         String toStringResult = booking.toString();
         assertNotNull(toStringResult);
         assertTrue(toStringResult.contains("Booking"));

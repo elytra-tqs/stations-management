@@ -10,7 +10,9 @@ import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
 
 import elytra.stations_management.models.Booking;
+import elytra.stations_management.models.Car;
 import elytra.stations_management.models.Charger;
+import elytra.stations_management.models.EVDriver;
 import elytra.stations_management.models.Station;
 import elytra.stations_management.models.User;
 
@@ -33,6 +35,22 @@ class BookingRepositoryTest {
                 .userType(User.UserType.EV_DRIVER)
                 .build();
         return entityManager.persist(user);
+    }
+
+    private Car createAndPersistCar(User user, String chargerType) {
+        EVDriver evDriver = EVDriver.builder()
+                .user(user)
+                .build();
+        entityManager.persist(evDriver);
+
+        Car car = Car.builder()
+                .model("Tesla Model 3")
+                .licensePlate("TEST-" + user.getUsername())
+                .batteryCapacity(75.0)
+                .chargerType(chargerType)
+                .evDriver(evDriver)
+                .build();
+        return entityManager.persist(car);
     }
 
     @Test
@@ -58,6 +76,9 @@ class BookingRepositoryTest {
                 .build();
         entityManager.persist(charger);
 
+        // Create and save car
+        Car car = createAndPersistCar(user, charger.getType());
+
         // Create and save booking
         LocalDateTime startTime = LocalDateTime.now().plusHours(1);
         LocalDateTime endTime = startTime.plusHours(1);
@@ -66,6 +87,7 @@ class BookingRepositoryTest {
                 .endTime(endTime)
                 .user(user)
                 .charger(charger)
+                .car(car)
                 .status(Booking.Status.PENDING)
                 .build();
         entityManager.persist(booking);
@@ -103,6 +125,10 @@ class BookingRepositoryTest {
                 .build();
         entityManager.persist(charger);
 
+        // Create cars for users
+        Car car1 = createAndPersistCar(user1, charger.getType());
+        Car car2 = createAndPersistCar(user2, charger.getType());
+
         // Create bookings for user1
         LocalDateTime startTime = LocalDateTime.now().plusHours(1);
         Booking booking1 = Booking.builder()
@@ -110,6 +136,7 @@ class BookingRepositoryTest {
                 .endTime(startTime.plusHours(1))
                 .user(user1)
                 .charger(charger)
+                .car(car1)
                 .status(Booking.Status.PENDING)
                 .build();
         entityManager.persist(booking1);
@@ -120,6 +147,7 @@ class BookingRepositoryTest {
                 .endTime(startTime.plusHours(3))
                 .user(user2)
                 .charger(charger)
+                .car(car2)
                 .status(Booking.Status.CONFIRMED)
                 .build();
         entityManager.persist(booking2);
@@ -162,6 +190,9 @@ class BookingRepositoryTest {
                 .build();
         entityManager.persist(charger2);
 
+        // Create car
+        Car car = createAndPersistCar(user, charger1.getType());
+
         // Create bookings
         LocalDateTime startTime = LocalDateTime.now().plusHours(1);
         Booking booking1 = Booking.builder()
@@ -169,6 +200,7 @@ class BookingRepositoryTest {
                 .endTime(startTime.plusHours(1))
                 .user(user)
                 .charger(charger1)
+                .car(car)
                 .status(Booking.Status.PENDING)
                 .build();
         entityManager.persist(booking1);
@@ -178,6 +210,7 @@ class BookingRepositoryTest {
                 .endTime(startTime.plusHours(3))
                 .user(user)
                 .charger(charger1)
+                .car(car)
                 .status(Booking.Status.CONFIRMED)
                 .build();
         entityManager.persist(booking2);
@@ -211,6 +244,9 @@ class BookingRepositoryTest {
                 .build();
         entityManager.persist(charger);
 
+        // Create car
+        Car car = createAndPersistCar(user, charger.getType());
+
         // Create existing booking
         LocalDateTime existingStart = LocalDateTime.now().plusHours(2);
         LocalDateTime existingEnd = existingStart.plusHours(2);
@@ -219,6 +255,7 @@ class BookingRepositoryTest {
                 .endTime(existingEnd)
                 .user(user)
                 .charger(charger)
+                .car(car)
                 .status(Booking.Status.CONFIRMED)
                 .build();
         entityManager.persist(existingBooking);
@@ -262,6 +299,9 @@ class BookingRepositoryTest {
                 .build();
         entityManager.persist(charger);
 
+        // Create car
+        Car car = createAndPersistCar(user, charger.getType());
+
         LocalDateTime baseTime = LocalDateTime.now();
         
         // Create bookings at different times
@@ -270,6 +310,7 @@ class BookingRepositoryTest {
                 .endTime(baseTime.plusHours(2))
                 .user(user)
                 .charger(charger)
+                .car(car)
                 .status(Booking.Status.CONFIRMED)
                 .build();
         entityManager.persist(booking1);
@@ -279,6 +320,7 @@ class BookingRepositoryTest {
                 .endTime(baseTime.plusHours(4))
                 .user(user)
                 .charger(charger)
+                .car(car)
                 .status(Booking.Status.CONFIRMED)
                 .build();
         entityManager.persist(booking2);
@@ -288,6 +330,7 @@ class BookingRepositoryTest {
                 .endTime(baseTime.plusHours(6))
                 .user(user)
                 .charger(charger)
+                .car(car)
                 .status(Booking.Status.CANCELLED)
                 .build();
         entityManager.persist(booking3);
@@ -326,6 +369,9 @@ class BookingRepositoryTest {
                 .build();
         entityManager.persist(charger);
 
+        // Create car
+        Car car = createAndPersistCar(user, charger.getType());
+
         LocalDateTime startTime = LocalDateTime.now().plusHours(1);
         
         // Create bookings with different statuses
@@ -334,6 +380,7 @@ class BookingRepositoryTest {
                 .endTime(startTime.plusHours(1))
                 .user(user)
                 .charger(charger)
+                .car(car)
                 .status(Booking.Status.PENDING)
                 .build();
         entityManager.persist(pendingBooking);
@@ -343,6 +390,7 @@ class BookingRepositoryTest {
                 .endTime(startTime.plusHours(3))
                 .user(user)
                 .charger(charger)
+                .car(car)
                 .status(Booking.Status.CONFIRMED)
                 .build();
         entityManager.persist(confirmedBooking);

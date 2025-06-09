@@ -49,4 +49,7 @@ public class Station {
     @JoinColumn(name = "admin_id")
     @JsonBackReference
     private Admin admin;
+
+    @Transient
+    private String operatorUsername;
 }

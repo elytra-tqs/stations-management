@@ -4,16 +4,16 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import elytra.stations_management.config.TestContainerConfig;
 import elytra.stations_management.models.AuthRequest;
 import elytra.stations_management.models.User;
-import elytra.stations_management.repositories.UserRepository;
+import elytra.stations_management.repositories.*;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.ContextConfiguration;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.transaction.annotation.Transactional;
@@ -26,10 +26,13 @@ import static org.hamcrest.Matchers.*;
 
 @SpringBootTest
 @AutoConfigureMockMvc
-@ActiveProfiles("test")
+@ActiveProfiles("mysql-test")
 @Transactional
 @Testcontainers
-@Import(TestContainerConfig.class)
+@ContextConfiguration(
+    classes = TestContainerConfig.class,
+    initializers = TestContainerConfig.Initializer.class
+)
 class AuthenticationIntegrationTest {
 
     @Autowired
@@ -40,13 +43,43 @@ class AuthenticationIntegrationTest {
 
     @Autowired
     private UserRepository userRepository;
+    
+    @Autowired
+    private BookingRepository bookingRepository;
+    
+    @Autowired
+    private CarRepository carRepository;
+    
+    @Autowired
+    private ChargerRepository chargerRepository;
+    
+    @Autowired
+    private StationOperatorRepository stationOperatorRepository;
+    
+    @Autowired
+    private StationRepository stationRepository;
+    
+    @Autowired
+    private AdminRepository adminRepository;
+    
+    @Autowired
+    private EVDriverRepository evDriverRepository;
 
     @Autowired
     private PasswordEncoder passwordEncoder;
 
     @BeforeEach
     void setUp() {
+        // Delete in correct order to avoid foreign key constraint violations
+        bookingRepository.deleteAll();
+        carRepository.deleteAll();
+        chargerRepository.deleteAll();
+        stationOperatorRepository.deleteAll();
+        stationRepository.deleteAll();
+        adminRepository.deleteAll();
+        evDriverRepository.deleteAll();
         userRepository.deleteAll();
+        userRepository.flush();
     }
 
     @Test
