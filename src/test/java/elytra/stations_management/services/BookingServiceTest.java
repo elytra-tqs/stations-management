@@ -15,9 +15,12 @@ import static org.mockito.Mockito.*;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import elytra.stations_management.models.Booking;
+import elytra.stations_management.models.Car;
 import elytra.stations_management.models.Charger;
+import elytra.stations_management.models.EVDriver;
 import elytra.stations_management.models.User;
 import elytra.stations_management.repositories.BookingRepository;
+import elytra.stations_management.repositories.CarRepository;
 import elytra.stations_management.repositories.UserRepository;
 import elytra.stations_management.dto.BookingRequest;
 import elytra.stations_management.exception.InvalidBookingException;
@@ -34,6 +37,9 @@ class BookingServiceTest {
     @Mock
     private UserRepository userRepository;
 
+    @Mock
+    private CarRepository carRepository;
+
     @InjectMocks
     private BookingService bookingService;
 
@@ -41,6 +47,8 @@ class BookingServiceTest {
     private Booking booking;
     private Charger charger;
     private User user;
+    private Car car;
+    private EVDriver evDriver;
     private LocalDateTime startTime;
     private LocalDateTime endTime;
 
@@ -66,11 +74,26 @@ class BookingServiceTest {
                 .status(Charger.Status.AVAILABLE)
                 .build();
 
+        evDriver = EVDriver.builder()
+                .id(456L)
+                .user(user)
+                .build();
+
+        car = Car.builder()
+                .id(789L)
+                .model("Tesla Model 3")
+                .licensePlate("TEST123")
+                .batteryCapacity(75.0)
+                .chargerType("Type 2")
+                .evDriver(evDriver)
+                .build();
+
         bookingRequest = BookingRequest.builder()
                 .startTime(startTime)
                 .endTime(endTime)
                 .userId(123L)
                 .chargerId(1L)
+                .carId(789L)
                 .build();
 
         booking = Booking.builder()
@@ -79,16 +102,18 @@ class BookingServiceTest {
                 .endTime(endTime)
                 .user(user)
                 .charger(charger)
+                .car(car)
                 .status(Booking.Status.PENDING)
                 .build();
 
         // Manually create BookingService with self-injection
-        bookingService = new BookingService(bookingRepository, chargerService, userRepository, bookingService);
+        bookingService = new BookingService(bookingRepository, chargerService, userRepository, carRepository, bookingService);
     }
 
     @Test
     void createBooking_ShouldCreateValidBooking() {
         when(userRepository.findById(123L)).thenReturn(Optional.of(user));
+        when(carRepository.findById(789L)).thenReturn(Optional.of(car));
         when(chargerService.getChargerById(1L)).thenReturn(charger);
         when(bookingRepository.findOverlappingBookings(
                 anyLong(), any(LocalDateTime.class), any(LocalDateTime.class)))
@@ -113,8 +138,44 @@ class BookingServiceTest {
     }
 
     @Test
+    void createBooking_WhenCarNotFound_ShouldThrowException() {
+        when(userRepository.findById(123L)).thenReturn(Optional.of(user));
+        when(carRepository.findById(789L)).thenReturn(Optional.empty());
+
+        InvalidBookingException exception = assertThrows(InvalidBookingException.class, 
+            () -> bookingService.createBooking(bookingRequest));
+        assertEquals("Car not found", exception.getMessage());
+    }
+
+    @Test
+    void createBooking_WhenCarDoesNotBelongToUser_ShouldThrowException() {
+        when(userRepository.findById(123L)).thenReturn(Optional.of(user));
+        User differentUser = User.builder().id(999L).build();
+        EVDriver differentDriver = EVDriver.builder().id(999L).user(differentUser).build();
+        car.setEvDriver(differentDriver);
+        when(carRepository.findById(789L)).thenReturn(Optional.of(car));
+
+        InvalidBookingException exception = assertThrows(InvalidBookingException.class, 
+            () -> bookingService.createBooking(bookingRequest));
+        assertEquals("Car does not belong to the user", exception.getMessage());
+    }
+
+    @Test
+    void createBooking_WhenChargerTypeNotCompatible_ShouldThrowException() {
+        when(userRepository.findById(123L)).thenReturn(Optional.of(user));
+        when(carRepository.findById(789L)).thenReturn(Optional.of(car));
+        charger.setType("CHAdeMO");
+        when(chargerService.getChargerById(1L)).thenReturn(charger);
+
+        InvalidBookingException exception = assertThrows(InvalidBookingException.class, 
+            () -> bookingService.createBooking(bookingRequest));
+        assertEquals("Car charger type (Type 2) is not compatible with charger type (CHAdeMO)", exception.getMessage());
+    }
+
+    @Test
     void createBooking_WhenChargerNotAvailable_ShouldThrowException() {
         when(userRepository.findById(123L)).thenReturn(Optional.of(user));
+        when(carRepository.findById(789L)).thenReturn(Optional.of(car));
         charger.setStatus(Charger.Status.BEING_USED);
         when(chargerService.getChargerById(1L)).thenReturn(charger);
 
@@ -126,6 +187,7 @@ class BookingServiceTest {
     @Test
     void createBooking_WhenOverlappingBookingExists_ShouldThrowException() {
         when(userRepository.findById(123L)).thenReturn(Optional.of(user));
+        when(carRepository.findById(789L)).thenReturn(Optional.of(car));
         when(chargerService.getChargerById(1L)).thenReturn(charger);
         when(bookingRepository.findOverlappingBookings(
                 anyLong(), any(LocalDateTime.class), any(LocalDateTime.class)))
@@ -167,6 +229,12 @@ class BookingServiceTest {
         assertEquals("Charger ID is required", exception.getMessage());
 
         bookingRequest.setChargerId(1L);
+        bookingRequest.setCarId(null);
+        exception = assertThrows(InvalidBookingException.class, 
+            () -> bookingService.createBooking(bookingRequest));
+        assertEquals("Car ID is required", exception.getMessage());
+
+        bookingRequest.setCarId(789L);
         bookingRequest.setStartTime(LocalDateTime.now().minusHours(1));
         exception = assertThrows(InvalidBookingException.class, 
             () -> bookingService.createBooking(bookingRequest));

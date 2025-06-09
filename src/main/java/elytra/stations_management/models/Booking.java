@@ -36,6 +36,10 @@ public class Booking {
     @JoinColumn(name = "charger_id", nullable = false)
     private Charger charger;
 
+    @ManyToOne
+    @JoinColumn(name = "car_id", nullable = false)
+    private Car car;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     @Builder.Default
